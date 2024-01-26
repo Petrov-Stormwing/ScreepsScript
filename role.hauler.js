@@ -6,6 +6,7 @@ let roleHauler = {
         let sourceCreep = findSourceCreep(creep);
 
         if (sourceCreep && creep.store.getFreeCapacity() > 0) {
+            // collectDroppedEnergy(creep)
             HaulFromCreep(creep, sourceCreep);
         } else {
             // If the hauler is full, deliver the energy to the Store function
@@ -67,5 +68,21 @@ function Store(creep) {
 function DeliverEnergy(creep, target) {
     if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
         creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
+    }
+}
+
+function collectDroppedEnergy(creep) {
+    // Find all dropped energy within a certain range
+    let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 100);
+console.log(droppedEnergy.length);
+    // If there is dropped energy, collect it
+    if (droppedEnergy.length > 0) {
+        // Sort dropped energy by amount (descending order)
+        droppedEnergy.sort((a, b) => b.amount - a.amount);
+
+        // Collect the most significant amount of dropped energy
+        if (creep.pickup(droppedEnergy[0]) === ERR_NOT_IN_RANGE) {
+            creep.moveTo(droppedEnergy[0], { visualizePathStyle: { stroke: '#ffaa00' } });
+        }
     }
 }
