@@ -6,14 +6,15 @@ let roleHauler = require('role.hauler');
 const SPAWN = 'Xel\'Invictus';
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 4,
+    'Upgrader': 9,
     'Builders': 4,
     'Haulers': 4,
     'Claimer': 1
 };
 
 module.exports.loop = function () {
-    const utils = require('Utils')
+    const utils = require('Utils');
+    const ResourcesUtility=require('ResourcesUtility');
 
     BuildHarvesters();
     BuildUpgraders();
@@ -79,7 +80,7 @@ function BuildUpgraders() {
     if (upgraders.length < CREEP_COUNTER['Upgrader']) {
         let newName = 'Upgrader' + Game.time;
         console.log('Spawning new upgrader: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, MOVE, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, MOVE, MOVE], newName,
             {memory: {role: 'upgrader'}});
     }
 }
@@ -91,7 +92,7 @@ function BuildBuilders() {
     if (builders.length < CREEP_COUNTER['Builders']) {
         let newName = 'Builder' + Game.time;
         console.log('Spawning new builder: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, MOVE, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, MOVE, MOVE], newName,
             {memory: {role: 'builder'}});
     }
 }
@@ -103,7 +104,7 @@ function BuildHauler() {
     if (haulers.length < CREEP_COUNTER['Haulers']) {
         let newName = 'Hauler' + Game.time;
         console.log('Spawning new hauler: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, MOVE, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], newName,
             {memory: {role: 'hauler'}});
     }
 }

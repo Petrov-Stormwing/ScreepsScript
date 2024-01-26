@@ -9,4 +9,3 @@ let roleHarvester = {
 };
 
 module.exports = roleHarvester;
-

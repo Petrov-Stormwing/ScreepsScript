@@ -3,14 +3,12 @@ let roleHauler = {
     /** @param {Creep} creep **/
     run: function (creep) {
         // Find a creep with energy to haul
-        let sourceCreep = findSourceCreep(creep);
+        let sourceCreep = FindSourceCreep(creep);
 
         if (sourceCreep && creep.store.getFreeCapacity() > 0) {
-            collectDroppedEnergy(creep)
+            CollectDroppedEnergy(creep)
             HaulFromCreep(creep, sourceCreep);
         } else {
-            // If the hauler is full, deliver the energy to the Store function
-            console.log("hauler is full "+creep.store[RESOURCE_ENERGY])
             Store(creep);
         }
     }
@@ -24,7 +22,7 @@ function HaulFromCreep(hauler, sourceCreep) {
     }
 }
 
-function findSourceCreep(hauler) {
+function FindSourceCreep(hauler) {
     // Find all friendly harvester creeps within a range that have energy
     let sourceCreeps = hauler.pos.findInRange(FIND_MY_CREEPS, 5, {
         filter: (c) => c.memory.role === 'harvester' && c.store[RESOURCE_ENERGY] > 0
@@ -71,7 +69,7 @@ function DeliverEnergy(creep, target) {
     }
 }
 
-function collectDroppedEnergy(creep) {
+function CollectDroppedEnergy(creep) {
     // Find all dropped energy within a certain range
     let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 100);
 console.log(droppedEnergy.length);
