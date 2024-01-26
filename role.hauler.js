@@ -72,7 +72,7 @@ function DeliverEnergy(creep, target) {
 function CollectDroppedEnergy(creep) {
     // Find all dropped energy within a certain range
     let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 100);
-console.log(droppedEnergy.length);
+// console.log(droppedEnergy.length);
     // If there is dropped energy, collect it
     if (droppedEnergy.length > 0) {
         // Sort dropped energy by amount (descending order)

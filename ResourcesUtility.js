@@ -1,6 +1,7 @@
 global.Salvage = Salvage;
 global.HarvestEnergy = HarvestEnergy;
 global.Mine = Mine;
+
 // global.Store=Store;
 
 function Salvage(creep) {
@@ -9,7 +10,7 @@ function Salvage(creep) {
     // Access the 'store' property to get the actual resource
     let energyInRuins = ruins[1].store[RESOURCE_ENERGY];
 
-    console.log("Ruin content:", energyInRuins);
+    //console.log("Ruin content:", energyInRuins);
     // Check if the ruin is not too far away
 
     creep.moveTo(ruins[1], {visualizePathStyle: {stroke: '#ffaa00'}});
@@ -30,12 +31,15 @@ function Salvage(creep) {
 function HarvestEnergy(creep) {
     let containers = getContainers(creep);
     if (containers.length > 0) {
-        console.log(containers[0].store[RESOURCE_ENERGY])
-        if (containers[0].store[RESOURCE_ENERGY] > 0) {
-            Drain(creep, containers[0]);
-        } else {
-            Mine(creep)
+        for (let container of containers) {
+            // console.log(container.store[RESOURCE_ENERGY])
+            if (container.store[RESOURCE_ENERGY] > 0) {
+                Drain(creep, container);
+                break;
+            }
         }
+    } else {
+        Mine(creep)
     }
 }
 

@@ -30,26 +30,6 @@ function setBuildingParameter(creep) {
     }
 }
 
-function RepairAndBuild(creep) {
-    // Find structures that need repairing
-    let structuresToRepair = creep.room.find(FIND_STRUCTURES, {
-        filter: structure => structure.hits < structure.hitsMax
-    });
-
-    // If there are structures to repair, prioritize repairs
-    if (structuresToRepair.length > 0) {
-        // Sort the structures by their hits (ascending order)
-        structuresToRepair.sort((a, b) => a.hits - b.hits);
-
-        // RepairAndBuild the structure with the lowest hits first
-        if (creep.repair(structuresToRepair[0]) === ERR_NOT_IN_RANGE) {
-            creep.moveTo(structuresToRepair[0]);
-        }
-    } else {
-        Build(creep);
-    }
-}
-
 function Build(creep) {
     let targets = creep.room.find(FIND_CONSTRUCTION_SITES);
     if (targets.length) {
