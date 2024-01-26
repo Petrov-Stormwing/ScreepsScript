@@ -6,7 +6,7 @@ let roleHauler = {
         let sourceCreep = findSourceCreep(creep);
 
         if (sourceCreep && creep.store.getFreeCapacity() > 0) {
-            // collectDroppedEnergy(creep)
+            collectDroppedEnergy(creep)
             HaulFromCreep(creep, sourceCreep);
         } else {
             // If the hauler is full, deliver the energy to the Store function
