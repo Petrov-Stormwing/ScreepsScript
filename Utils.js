@@ -20,7 +20,6 @@ function getContainers(creep) {
 function getExtensions(creep) {
     return creep.room.find(FIND_STRUCTURES, {
         filter: (structure) => structure.structureType === STRUCTURE_EXTENSION
-            && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
     });
 }
 

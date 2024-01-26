@@ -19,10 +19,10 @@ module.exports.loop = function () {
     let harvesters = _.filter(Game.creeps, (creep) => creep.memory.role === 'harvester');
     console.log('Harvesters: ' + harvesters.length);
 
-    if (harvesters.length < 2) {
+    if (harvesters.length < 4) {
         let newName = 'Harvester' + Game.time;
         console.log('Spawning new harvester: ' + newName);
-        Game.spawns[spawn].spawnCreep([WORK, WORK, WORK, CARRY, MOVE], newName,
+        Game.spawns[spawn].spawnCreep([WORK, WORK, WORK, CARRY, CARRY, MOVE], newName,
             {memory: {role: 'harvester'}});
     }
 
@@ -33,7 +33,7 @@ module.exports.loop = function () {
     if (upgraders.length < 2) {
         let newName = 'Upgrader' + Game.time;
         console.log('Spawning new upgrader: ' + newName);
-        Game.spawns[spawn].spawnCreep([WORK, CARRY, CARRY, MOVE], newName,
+        Game.spawns[spawn].spawnCreep([WORK, WORK, CARRY, MOVE, MOVE], newName,
             {memory: {role: 'upgrader'}});
     }
 
@@ -44,19 +44,20 @@ module.exports.loop = function () {
     if (builders.length < 2) {
         let newName = 'Builder' + Game.time;
         console.log('Spawning new builder: ' + newName);
-        Game.spawns[spawn].spawnCreep([WORK, CARRY, CARRY, MOVE], newName,
+        Game.spawns[spawn].spawnCreep([WORK, WORK, CARRY, MOVE, MOVE], newName,
             {memory: {role: 'builder'}});
     }
 
-    // //Haulers - Find and if necessary Build
-    // let haulers = _.filter(Game.creeps, (creep) => creep.memory.role === 'hauler');
-    // console.log('Haulers: ' + haulers.length);
-    // if (haulers.length < 1) {
-    //     let newName = 'Hauler' + Game.time;
-    //     console.log('Spawning new hauler: ' + newName);
-    //     Game.spawns[spawn].spawnCreep([CARRY, CARRY, MOVE, MOVE, MOVE], newName,
-    //         {memory: {role: 'hauler'}});
-    // }
+    //Haulers - Find and if necessary Build
+    let haulers = _.filter(Game.creeps, (creep) => creep.memory.role === 'hauler');
+    console.log('Haulers: ' + haulers.length);
+
+    if (haulers.length < 4) {
+        let newName = 'Hauler' + Game.time;
+        console.log('Spawning new hauler: ' + newName);
+        Game.spawns[spawn].spawnCreep([CARRY, CARRY, MOVE, MOVE], newName,
+            {memory: {role: 'hauler'}});
+    }
 
     if (Game.spawns[spawn].spawning) {
         let spawningCreep = Game.creeps[Game.spawns[spawn].spawning.name];
@@ -78,9 +79,9 @@ module.exports.loop = function () {
         if (creep.memory.role === 'builder') {
             roleBuilder.run(creep);
         }
-        // if (creep.memory.role === 'hauler') {
-        //     roleHauler.run(creep);
-        // }
+        if (creep.memory.role === 'hauler') {
+            roleHauler.run(creep);
+        }
     }
 }
 

@@ -7,7 +7,8 @@ let roleBuilder = {
         setBuildingParameter(creep)
 
         if (creep.memory.building) {
-            RepairAndBuild(creep);
+            Build(creep);
+            // RepairAndBuild(creep);
         } else {
             HarvestEnergy(creep);
         }
