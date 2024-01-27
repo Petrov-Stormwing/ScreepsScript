@@ -1,4 +1,4 @@
-require('Utils');
+require('ResourcesUtility');
 
 let roleBuilder = {
 
@@ -8,7 +8,6 @@ let roleBuilder = {
 
         if (creep.memory.building) {
             Build(creep);
-            // RepairAndBuild(creep);
         } else {
             HarvestEnergy(creep);
         }

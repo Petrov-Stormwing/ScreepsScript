@@ -3,14 +3,16 @@ let roleUpgrader = require('role.upgrader');
 let roleBuilder = require('role.builder');
 let roleHauler = require('role.hauler');
 let roleRepairer=require('role.Repairer');
+let roleCollector=require('role.Collector');
 
 const SPAWN = 'Xel\'Invictus';
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 0,
-    'Builders': 0,
+    'Upgrader': 2,
+    'Builders': 4,
+    'Repairers': 0,
     'Haulers': 4,
-    'Repairers': 5
+    'Collector':0
 };
 
 module.exports.loop = function () {
@@ -22,6 +24,7 @@ module.exports.loop = function () {
     BuildBuilders();
     BuildRepairers();
     BuildHauler();
+    BuildCollectors();
 
     CreepDrivers()
 }
@@ -62,6 +65,9 @@ function CreepDrivers() {
         }
         if (creep.memory.role === 'repairer') {
             roleRepairer.run(creep);
+        }
+        if (creep.memory.role === 'collector') {
+            roleCollector.run(creep);
         }
     }
 }
@@ -113,7 +119,6 @@ function BuildRepairers() {
     }
 }
 
-//Build the Required Count of Haulers
 function BuildHauler() {
     let haulers = _.filter(Game.creeps, (creep) => creep.memory.role === 'hauler');
 
@@ -122,6 +127,17 @@ function BuildHauler() {
         console.log('Spawning new hauler: ' + newName);
         Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], newName,
             {memory: {role: 'hauler'}});
+    }
+}
+
+function BuildCollectors() {
+    let collectors = _.filter(Game.creeps, (creep) => creep.memory.role === 'collector');
+
+    if (collectors.length < CREEP_COUNTER['Collector']) {
+        let newName = 'Collector' + Game.time;
+        console.log('Spawning new collector: ' + newName);
+        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, MOVE, MOVE], newName,
+            {memory: {role: 'collector'}});
     }
 }
 

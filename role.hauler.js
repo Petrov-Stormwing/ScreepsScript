@@ -1,3 +1,4 @@
+require('ResourcesUtility');
 
 let roleHauler = {
 
@@ -7,7 +8,6 @@ let roleHauler = {
         let sourceCreep = FindSourceCreep(creep);
 
         if (sourceCreep && creep.store.getFreeCapacity() > 0) {
-            // CollectDroppedEnergy(creep)
             HaulFromCreep(creep, sourceCreep);
         } else {
             Store(creep);
@@ -48,7 +48,7 @@ function Store(creep) {
     }
     if (extensions.length > 0) {
         for (let e = 0; e < extensions.length; e++) {
-            if (extensions[e].store[RESOURCE_ENERGY] < EXTENSION_ENERGY_CAPACITY) {
+            if (extensions[e].store[RESOURCE_ENERGY] < 50) {
                 TransferToReceiver(creep, extensions[e]);
                 return; // Exit the function after delivering to the first extension
             }

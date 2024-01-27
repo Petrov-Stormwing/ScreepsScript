@@ -2,7 +2,6 @@ global.Salvage = Salvage;
 global.HarvestEnergy = HarvestEnergy;
 global.Mine = Mine;
 global.TransferToReceiver = TransferToProvider;
-global.CollectDroppedEnergy=CollectDroppedEnergy;
 // global.Store=Store;
 
 function Salvage(creep) {
@@ -30,10 +29,9 @@ function HarvestEnergy(creep) {
         for (let container of containers) {
             if (container.store[RESOURCE_ENERGY] > 0) {
                 Withdraw(creep, container);
-                break;
+                return; // Exit the function after delivering to the first container
             }
         }
-        return; // Exit the function after delivering to the first container
     } else if (spawn && spawn.store[RESOURCE_ENERGY] < 300) {
         TransferToProvider(creep, spawn);
         return; // Exit the function after delivering to the first container
@@ -68,31 +66,6 @@ function TransferToReceiver(receiver, provider) {
 function TransferToProvider(provider, receiver) {
     provider.moveTo(receiver, {range: 1}, {visualizePathStyle: {stroke: '#ffaa00'}});
     provider.transfer(receiver, RESOURCE_ENERGY);
-}
-
-function CollectDroppedEnergy(creep) {
-    // Check if the hauler is already moving towards a dropped energy source
-    if (creep.memory.collecting) {
-        return;
-    }
-
-    // Find all dropped energy within a certain range
-    let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 100);
-    if (droppedEnergy.length > 0) {
-        // Sort dropped energy by amount (descending order)
-        droppedEnergy.sort((a, b) => b.amount - a.amount);
-
-        // Collect the most significant amount of dropped energy
-        if (creep.pickup(droppedEnergy[0]) === ERR_NOT_IN_RANGE) {
-            creep.memory.collecting = true;
-            creep.moveTo(droppedEnergy[0], {
-                visualizePathStyle: { stroke: '#ffaa00' },
-                onComplete: () => {
-                    creep.memory.collecting = false;
-                }
-            });
-        }
-    }
 }
 
 //Balanced function to mine from Energy Source
