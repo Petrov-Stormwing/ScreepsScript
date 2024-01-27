@@ -6,7 +6,8 @@ let roleRepairer = {
     run: function (creep) {
         setRepairParameter(creep)
         if (creep.memory.repairing) {
-            Repair(creep);
+            let structures = FindDamagedStructures(creep);
+            ConductRepairs(creep, structures);
         } else {
             HarvestEnergy(creep);
         }
@@ -28,17 +29,36 @@ function setRepairParameter(creep) {
     }
 }
 
-//Find all Structures in need of repair, order them and repair the one in most dire need.
-function Repair(creep) {
+/**
+ * Find all Structures in need of repair. Provide them sorted by percentile damage to the conducting the repair function.
+ * @param creep
+ * @returns {*}
+ */
+function FindDamagedStructures(creep) {
     let structuresToRepair = creep.room.find(FIND_STRUCTURES, {
         filter: structure => structure.hits < structure.hitsMax
     });
-
     if (structuresToRepair.length > 0) {
-        structuresToRepair.sort((a, b) => a.hits - b.hits);
+        structuresToRepair.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
+        return structuresToRepair;
+    } else {
+        console.log("No STRUCTURES to repair in this room at the moment");
+    }
+}
 
-        if (creep.repair(structuresToRepair[0]) === ERR_NOT_IN_RANGE) {
-            creep.moveTo(structuresToRepair[0]);
+/**
+ * Commences repair.
+ * @param creep
+ * @param structures
+ */
+function ConductRepairs(creep, structures) {
+    let repairers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'repairer');
+    if (repairers.length > 0) {
+        for (let r = 0; r < repairers.length; r++) {
+            repairers[r].moveTo(structures[r], {range: 1});
+            repairers[r].repair(structures[r]);
         }
+    } else {
+        console.log("No CREEPS to conduct Repairs");
     }
 }

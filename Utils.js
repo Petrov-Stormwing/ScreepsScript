@@ -19,6 +19,3 @@ function getExtensions(creep) {
         filter: (structure) => structure.structureType === STRUCTURE_EXTENSION
     });
 }
-
-
-

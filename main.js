@@ -7,10 +7,10 @@ let roleRepairer=require('role.Repairer');
 const SPAWN = 'Xel\'Invictus';
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 2,
+    'Upgrader': 0,
     'Builders': 0,
     'Haulers': 4,
-    'Repairers': 6
+    'Repairers': 5
 };
 
 module.exports.loop = function () {
