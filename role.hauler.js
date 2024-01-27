@@ -1,3 +1,4 @@
+
 let roleHauler = {
 
     /** @param {Creep} creep **/
@@ -6,7 +7,7 @@ let roleHauler = {
         let sourceCreep = FindSourceCreep(creep);
 
         if (sourceCreep && creep.store.getFreeCapacity() > 0) {
-            CollectDroppedEnergy(creep)
+            // CollectDroppedEnergy(creep)
             HaulFromCreep(creep, sourceCreep);
         } else {
             Store(creep);
@@ -41,46 +42,24 @@ function Store(creep) {
     let containers = getContainers(creep);
 
     // Store in Spawner, Extension, or Container
-    if (spawn && spawn.store[RESOURCE_ENERGY] < 300) {
-        DeliverEnergy(creep, spawn);
+    if (spawn && spawn.store[RESOURCE_ENERGY] < SPAWN_ENERGY_CAPACITY) {
+        TransferToReceiver(creep, spawn);
         return; // Exit the function after delivering to the first container
     }
     if (extensions.length > 0) {
         for (let e = 0; e < extensions.length; e++) {
-            if (extensions[e].store[RESOURCE_ENERGY] < 50) {
-                DeliverEnergy(creep, extensions[e]);
+            if (extensions[e].store[RESOURCE_ENERGY] < EXTENSION_ENERGY_CAPACITY) {
+                TransferToReceiver(creep, extensions[e]);
                 return; // Exit the function after delivering to the first extension
             }
         }
     }
     if (containers.length > 0) {
         for (let c = 0; c < containers.length; c++) {
-            if (containers[c].store[RESOURCE_ENERGY] < 2000) {
-                DeliverEnergy(creep, containers[c]);
+            if (containers[c].store[RESOURCE_ENERGY] < CONTAINER_CAPACITY) {
+                TransferToReceiver(creep, containers[c]);
                 return; // Exit the function after delivering to the first container
             }
-        }
-    }
-}
-
-function DeliverEnergy(creep, target) {
-    if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
-    }
-}
-
-function CollectDroppedEnergy(creep) {
-    // Find all dropped energy within a certain range
-    let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 100);
-// console.log(droppedEnergy.length);
-    // If there is dropped energy, collect it
-    if (droppedEnergy.length > 0) {
-        // Sort dropped energy by amount (descending order)
-        droppedEnergy.sort((a, b) => b.amount - a.amount);
-
-        // Collect the most significant amount of dropped energy
-        if (creep.pickup(droppedEnergy[0]) === ERR_NOT_IN_RANGE) {
-            creep.moveTo(droppedEnergy[0], { visualizePathStyle: { stroke: '#ffaa00' } });
         }
     }
 }

@@ -8,9 +8,9 @@ const SPAWN = 'Xel\'Invictus';
 const CREEP_COUNTER = {
     'Harvesters': 4,
     'Upgrader': 2,
-    'Builders': 2,
+    'Builders': 0,
     'Haulers': 4,
-    'Repairers': 3
+    'Repairers': 6
 };
 
 module.exports.loop = function () {
@@ -85,7 +85,7 @@ function BuildUpgraders() {
     if (upgraders.length < CREEP_COUNTER['Upgrader']) {
         let newName = 'Upgrader' + Game.time;
         console.log('Spawning new upgrader: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, MOVE, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, CARRY, CARRY, MOVE], newName,
             {memory: {role: 'upgrader'}});
     }
 }

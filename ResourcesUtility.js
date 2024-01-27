@@ -1,59 +1,101 @@
 global.Salvage = Salvage;
 global.HarvestEnergy = HarvestEnergy;
 global.Mine = Mine;
-
+global.TransferToReceiver = TransferToProvider;
+global.CollectDroppedEnergy=CollectDroppedEnergy;
 // global.Store=Store;
 
 function Salvage(creep) {
+    //Find Ruins
     let ruins = Game.rooms['W59S4'].find(FIND_RUINS);
 
-    // Access the 'store' property to get the actual resource
-    let energyInRuins = ruins[1].store[RESOURCE_ENERGY];
-
-    //console.log("Ruin content:", energyInRuins);
-    // Check if the ruin is not too far away
-
-    creep.moveTo(ruins[1], {visualizePathStyle: {stroke: '#ffaa00'}});
-    // Check if there is enough energy in the ruins
-    if (energyInRuins > 0) {
-        // Use the creep to transfer energy from the ruins to your storage or another container
-        let withdrawResult = creep.withdraw(ruins[1], RESOURCE_ENERGY);
-        if (withdrawResult === OK) {
-            console.log("Successfully withdrew energy from ruins");
-        } else {
-            console.log("Withdrawal failed with code:", withdrawResult);
+    //If Ruins in the room Exist, Withdraw existing Energy from them
+    if(ruins.length>0) {
+        for (let ruin of ruins) {
+            if (ruin.store[RESOURCE_ENERGY] > 0) {
+                Withdraw(creep, ruin);
+                break;
+            }
         }
-    } else {
-        console.log("No energy in ruins to withdraw.");
+    }else{
+        console.log("No Ruins present in the room at the moment");
     }
 }
 
 function HarvestEnergy(creep) {
+    let spawn = getSpawner(creep);
+    let extensions = getExtensions(creep);
     let containers = getContainers(creep);
     if (containers.length > 0) {
         for (let container of containers) {
-            // console.log(container.store[RESOURCE_ENERGY])
             if (container.store[RESOURCE_ENERGY] > 0) {
-                Drain(creep, container);
+                Withdraw(creep, container);
                 break;
             }
         }
-    } else {
-        Mine(creep)
+        return; // Exit the function after delivering to the first container
+    } else if (spawn && spawn.store[RESOURCE_ENERGY] < 300) {
+        TransferToProvider(creep, spawn);
+        return; // Exit the function after delivering to the first container
     }
 }
 
-function Drain(creep, source) {
-    // Check if the creep is not too far away from the spawn
-    if (source.pos.inRangeTo(creep.pos, 1)) {
-        // Use the creep to withdraw energy from the spawn
-        creep.withdraw(source, RESOURCE_ENERGY);
-    } else {
-        // Move towards the spawn if it's not in range
-        creep.moveTo(source);
+/**
+ * Universal Withdraw of Energy between two Objects (Creeps or Structures)
+ * @param receiver - The empty object.
+ * @param provider - The full object.
+ */
+function Withdraw(receiver, provider) {
+    receiver.moveTo(provider, {range: 1}, {visualizePathStyle: {stroke: '#ffaa00'}});
+    receiver.withdraw(provider, RESOURCE_ENERGY);
+}
+
+/**
+ * Universal TransferToReceiver of Energy between two Objects (Creeps or Structures)
+ * @param receiver - The empty object.
+ * @param provider - The full object.
+ */
+function TransferToReceiver(receiver, provider) {
+    receiver.moveTo(provider, {range: 1}, {visualizePathStyle: {stroke: '#ffaa00'}});
+    receiver.transfer(provider, RESOURCE_ENERGY);
+}
+
+/**
+ * Universal TransferToProvider of Energy between two Objects (Creeps or Structures)
+ * @param provider - The full object.
+ * @param receiver - The empty object.
+ */
+function TransferToProvider(provider, receiver) {
+    provider.moveTo(receiver, {range: 1}, {visualizePathStyle: {stroke: '#ffaa00'}});
+    provider.transfer(receiver, RESOURCE_ENERGY);
+}
+
+function CollectDroppedEnergy(creep) {
+    // Check if the hauler is already moving towards a dropped energy source
+    if (creep.memory.collecting) {
+        return;
+    }
+
+    // Find all dropped energy within a certain range
+    let droppedEnergy = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 100);
+    if (droppedEnergy.length > 0) {
+        // Sort dropped energy by amount (descending order)
+        droppedEnergy.sort((a, b) => b.amount - a.amount);
+
+        // Collect the most significant amount of dropped energy
+        if (creep.pickup(droppedEnergy[0]) === ERR_NOT_IN_RANGE) {
+            creep.memory.collecting = true;
+            creep.moveTo(droppedEnergy[0], {
+                visualizePathStyle: { stroke: '#ffaa00' },
+                onComplete: () => {
+                    creep.memory.collecting = false;
+                }
+            });
+        }
     }
 }
 
+//Balanced function to mine from Energy Source
 function Mine(creep) {
     // Check if the creep already has a source assigned
     if (!creep.memory.sourceId) {
