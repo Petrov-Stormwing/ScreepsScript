@@ -39,7 +39,7 @@ function FindDamagedStructures(creep) {
         filter: structure => structure.hits < structure.hitsMax
     });
     if (structuresToRepair.length > 0) {
-        structuresToRepair.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
+        // structuresToRepair.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
         return structuresToRepair;
     } else {
         console.log("No STRUCTURES to repair in this room at the moment");

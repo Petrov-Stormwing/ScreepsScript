@@ -43,13 +43,13 @@ function Store(creep) {
 
     // Store in Spawner, Extension, or Container
     if (spawn && spawn.store[RESOURCE_ENERGY] < SPAWN_ENERGY_CAPACITY) {
-        TransferToReceiver(creep, spawn);
+        Transfer(creep, spawn);
         return; // Exit the function after delivering to the first container
     }
     if (extensions.length > 0) {
         for (let e = 0; e < extensions.length; e++) {
             if (extensions[e].store[RESOURCE_ENERGY] < 50) {
-                TransferToReceiver(creep, extensions[e]);
+                Transfer(creep, extensions[e]);
                 return; // Exit the function after delivering to the first extension
             }
         }
@@ -57,7 +57,7 @@ function Store(creep) {
     if (containers.length > 0) {
         for (let c = 0; c < containers.length; c++) {
             if (containers[c].store[RESOURCE_ENERGY] < CONTAINER_CAPACITY) {
-                TransferToReceiver(creep, containers[c]);
+                Transfer(creep, containers[c]);
                 return; // Exit the function after delivering to the first container
             }
         }

@@ -1,8 +1,10 @@
+require('Utils');
+
 global.Salvage = Salvage;
 global.HarvestEnergy = HarvestEnergy;
 global.Mine = Mine;
-global.TransferToReceiver = TransferToProvider;
-// global.Store=Store;
+global.Transfer = Transfer;
+global.TransferToProvider = TransferToProvider;
 
 function Salvage(creep) {
     //Find Ruins
@@ -22,19 +24,14 @@ function Salvage(creep) {
 }
 
 function HarvestEnergy(creep) {
-    let spawn = getSpawner(creep);
-    let extensions = getExtensions(creep);
     let containers = getContainers(creep);
-    if (containers.length > 0) {
+    if (containers.length > 0){
         for (let container of containers) {
             if (container.store[RESOURCE_ENERGY] > 0) {
                 Withdraw(creep, container);
-                return; // Exit the function after delivering to the first container
+                break;
             }
         }
-    } else if (spawn && spawn.store[RESOURCE_ENERGY] < 300) {
-        TransferToProvider(creep, spawn);
-        return; // Exit the function after delivering to the first container
     }
 }
 
@@ -44,7 +41,7 @@ function HarvestEnergy(creep) {
  * @param provider - The full object.
  */
 function Withdraw(receiver, provider) {
-    receiver.moveTo(provider, {range: 1}, {visualizePathStyle: {stroke: '#ffaa00'}});
+    receiver.moveTo(provider, {visualizePathStyle: {stroke: '#ffaa00'}});
     receiver.withdraw(provider, RESOURCE_ENERGY);
 }
 
@@ -53,7 +50,7 @@ function Withdraw(receiver, provider) {
  * @param receiver - The empty object.
  * @param provider - The full object.
  */
-function TransferToReceiver(receiver, provider) {
+function Transfer(receiver, provider) {
     receiver.moveTo(provider, {range: 1}, {visualizePathStyle: {stroke: '#ffaa00'}});
     receiver.transfer(provider, RESOURCE_ENERGY);
 }
