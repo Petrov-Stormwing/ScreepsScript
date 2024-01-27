@@ -2,25 +2,25 @@ let roleHarvester = require('role.harvester');
 let roleUpgrader = require('role.upgrader');
 let roleBuilder = require('role.builder');
 let roleHauler = require('role.hauler');
-let roleRepairer=require('role.Repairer');
-let roleCollector=require('role.Collector');
-let roleSupplier=require('role.Supplier');
+let roleRepairer = require('role.Repairer');
+let roleCollector = require('role.Collector');
+let roleSupplier = require('role.Supplier');
 
 global.SPAWN = 'Xel\'Invictus';
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 2,
+    'Upgrader': 4,
     'Builders': 0,
-    'Repairers': 0,
+    'Repairers': 2,
     'Haulers': 4,
-    'Collector':1,
-    'Supplier': 2,
-    'Claimer':0
+    'Collector': 1,
+    'Supplier': 4,
+    'Claimer': 0
 };
 
 module.exports.loop = function () {
     const utils = require('Utils');
-    const ResourcesUtility=require('ResourcesUtility');
+    const ResourcesUtility = require('ResourcesUtility');
 
     BuildHarvesters();
     BuildUpgraders();
@@ -148,13 +148,13 @@ function BuildCollectors() {
     }
 }
 
-function BuildSuppliers(){
+function BuildSuppliers() {
     let suppliers = _.filter(Game.creeps, (creep) => creep.memory.role === 'supplier');
 
     if (suppliers.length < CREEP_COUNTER['Supplier']) {
         let newName = 'Supplier' + Game.time;
         console.log('Spawning new supplier: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, MOVE, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], newName,
             {memory: {role: 'supplier'}});
     }
 }

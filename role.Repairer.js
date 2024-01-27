@@ -7,7 +7,11 @@ let roleRepairer = {
         setRepairParameter(creep)
         if (creep.memory.repairing) {
             let structures = FindDamagedStructures(creep);
-            ConductRepairs(creep, structures);
+            if(structures) {
+                ConductRepairs(creep, structures);
+            }else{
+                console.log("Waiting");
+            }
         } else {
             HarvestEnergy(creep);
         }
