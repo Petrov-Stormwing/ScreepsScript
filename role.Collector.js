@@ -5,7 +5,7 @@ let roleCollector = {
         setCollectingParameter(creep)
         let resources = FindDroppedResources(creep)
         if (resources && creep.store.getFreeCapacity() > 0) {
-            // console.log("Check if Resourse is present: " + resources[0]);
+            // console.log("Check if Resource is present: " + resources[0]);
             ConductCollection(creep, resources)
         } else {
             Store(creep);
@@ -71,6 +71,17 @@ function ConductCollection(creep, resources) {
     }
 }
 
+function CollectFromTombstone(creep, tombstones) {
+    for (let tombstone of tombstones) {
+        creep.moveTo(tombstone);
+        // Use the creep to withdraw resources from the tombstone
+        for (const resourceType in tombstone.store) {
+            if (tombstone.store[resourceType] > 0) {
+                creep.withdraw(tombstone, resourceType);
+            }
+        }
+    }
+}
 
 function Store(creep) {
     let spawn = getSpawner(creep);

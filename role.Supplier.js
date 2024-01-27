@@ -6,10 +6,7 @@ let roleSupplier = {
     run: function (creep) {
         setSupplierParameters(creep)
         if (creep.memory.suppling) {
-            let upgrader = FindUpgrader(creep);
-            if (upgrader && creep.store[RESOURCE_ENERGY] > 0){
-                SupplyUpgrader(creep, upgrader);
-            }
+            SupplyUpgrader(creep)
         } else {
             HarvestEnergy(creep);
         }
@@ -31,11 +28,13 @@ function setSupplierParameters(creep) {
     }
 }
 
-function SupplyUpgrader(supplier, upgrader) {
+function SupplyUpgrader(supplier) {
     // console.log(upgrader.store[RESOURCE_ENERGY]);
-
-    if (supplier.transfer(upgrader, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        supplier.moveTo(upgrader, {visualizePathStyle: {stroke: '#ffffff'}});
+    let upgrader = FindUpgrader(supplier);
+    if (upgrader && supplier.store[RESOURCE_ENERGY] > 0){
+        if (supplier.transfer(upgrader, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+            supplier.moveTo(upgrader, {visualizePathStyle: {stroke: '#ffffff'}});
+        }
     }
 }
 

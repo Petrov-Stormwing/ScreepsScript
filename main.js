@@ -98,7 +98,7 @@ function BuildUpgraders() {
     if (upgraders.length < CREEP_COUNTER['Upgrader']) {
         let newName = 'Upgrader' + Game.time;
         console.log('Spawning new upgrader: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, CARRY, CARRY, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE], newName,
             {memory: {role: 'upgrader'}});
     }
 }

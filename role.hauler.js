@@ -24,16 +24,16 @@ function HaulFromCreep(hauler, sourceCreep) {
 }
 
 function FindSourceCreep(hauler) {
-    // Find all friendly harvester creeps within a range that have energy
-    let sourceCreeps = hauler.pos.findInRange(FIND_MY_CREEPS, 5, {
+   // Find all friendly harvester creeps within a range that have energy
+    let harvesters = hauler.pos.findInRange(FIND_MY_CREEPS, 5, {
         filter: (c) => c.memory.role === 'harvester' && c.store[RESOURCE_ENERGY] > 0
     });
 
     // Sort the source creeps based on their energy level (descending order)
-    sourceCreeps.sort((a, b) => b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY]);
+    harvesters.sort((a, b) => b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY]);
 
     // Return the harvester creep with the highest energy (first in the sorted array)
-    return sourceCreeps[0];
+    return harvesters[0];
 }
 
 function Store(creep) {

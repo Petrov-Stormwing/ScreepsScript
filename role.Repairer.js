@@ -39,9 +39,13 @@ function setRepairParameter(creep) {
  * @returns {*}
  */
 function FindDamagedStructures(creep) {
+    //Find all Structures that need repair
     let structuresToRepair = creep.room.find(FIND_STRUCTURES, {
         filter: structure => structure.hits < structure.hitsMax
     });
+
+    //If any, return them or log that there are no structures.
+    //Note: Sorting is reducing efficiency. Will keep it for some time and clean it up.
     if (structuresToRepair.length > 0) {
         // structuresToRepair.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
         return structuresToRepair;

@@ -1,27 +1,10 @@
 require('Utils');
 
-global.Salvage = Salvage;
 global.HarvestEnergy = HarvestEnergy;
-global.Mine = Mine;
+global.Withdraw=Withdraw;
 global.Transfer = Transfer;
-global.TransferToProvider = TransferToProvider;
-
-function Salvage(creep) {
-    //Find Ruins
-    let ruins = Game.rooms['W59S4'].find(FIND_RUINS);
-
-    //If Ruins in the room Exist, Withdraw existing Energy from them
-    if(ruins.length>0) {
-        for (let ruin of ruins) {
-            if (ruin.store[RESOURCE_ENERGY] > 0) {
-                Withdraw(creep, ruin);
-                break;
-            }
-        }
-    }else{
-        console.log("No Ruins present in the room at the moment");
-    }
-}
+global.Salvage = Salvage;
+global.Mine = Mine;
 
 function HarvestEnergy(creep) {
     let containers = getContainers(creep);
@@ -56,16 +39,30 @@ function Transfer(receiver, provider) {
 }
 
 /**
- * Universal TransferToProvider of Energy between two Objects (Creeps or Structures)
- * @param provider - The full object.
- * @param receiver - The empty object.
+ * Used for the purpose of draining energy from Ruins if present in the room.
+ * @param creep
  */
-function TransferToProvider(provider, receiver) {
-    provider.moveTo(receiver, {range: 1}, {visualizePathStyle: {stroke: '#ffaa00'}});
-    provider.transfer(receiver, RESOURCE_ENERGY);
+function Salvage(creep) {
+    //Find Ruins
+    let ruins = Game.rooms['W59S4'].find(FIND_RUINS);
+
+    //If Ruins in the room Exist, Withdraw existing Energy from them
+    if(ruins.length>0) {
+        for (let ruin of ruins) {
+            if (ruin.store[RESOURCE_ENERGY] > 0) {
+                Withdraw(creep, ruin);
+                break;
+            }
+        }
+    }else{
+        console.log("No Ruins present in the room at the moment");
+    }
 }
 
-//Balanced function to mine from Energy Source
+/**
+ * Balanced and Optimized function to Mine from Energy Source
+ * @param creep
+ */
 function Mine(creep) {
     // Check if the creep already has a source assigned
     if (!creep.memory.sourceId) {
@@ -81,9 +78,8 @@ function Mine(creep) {
 
     // Get the assigned source based on the memory
     let source = Game.getObjectById(creep.memory.sourceId);
-
-    // Harvest from the assigned source
-    if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
+    if (source) {
         creep.moveTo(source, {visualizePathStyle: {stroke: '#ffaa00'}});
+        creep.harvest(source)
     }
 }
