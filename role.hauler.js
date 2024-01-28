@@ -25,7 +25,7 @@ function HaulFromCreep(hauler, sourceCreep) {
 
 function FindSourceCreep(hauler) {
    // Find all friendly harvester creeps within a range that have energy
-    let harvesters = hauler.pos.findInRange(FIND_MY_CREEPS, 5, {
+    let harvesters = hauler.pos.findInRange(FIND_MY_CREEPS, 10, {
         filter: (c) => c.memory.role === 'harvester' && c.store[RESOURCE_ENERGY] > 0
     });
 

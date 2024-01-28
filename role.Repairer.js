@@ -1,4 +1,4 @@
-require('Utils');
+require('ResourcesUtility');
 
 let roleRepairer = {
 
@@ -63,7 +63,7 @@ function ConductRepairs(creep, structures) {
     let repairers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'repairer');
     if (repairers.length > 0) {
         for (let r = 0; r < repairers.length; r++) {
-            repairers[r].moveTo(structures[r], {range: 1});
+            repairers[r].moveTo(structures[r], {visualizePathStyle: {stroke: '#ffaa00'}});
             repairers[r].repair(structures[r]);
         }
     } else {

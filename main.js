@@ -5,17 +5,18 @@ let roleHauler = require('role.hauler');
 let roleRepairer = require('role.Repairer');
 let roleCollector = require('role.Collector');
 let roleSupplier = require('role.Supplier');
+let roleClaimer=require('role.Claimer');
 
 global.SPAWN = 'Xel\'Invictus';
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 4,
+    'Upgrader': 3,
     'Builders': 0,
-    'Repairers': 2,
+    'Repairers': 1,
     'Haulers': 4,
     'Collector': 1,
-    'Supplier': 4,
-    'Claimer': 0
+    'Supplier': 3,
+    'Claimer': 0,
 };
 
 module.exports.loop = function () {
@@ -28,7 +29,8 @@ module.exports.loop = function () {
     BuildRepairers();
     BuildHauler();
     BuildCollectors();
-    BuildSuppliers()
+    BuildSuppliers();
+    BuildClaimer();
 
     CreepDrivers()
 }
@@ -76,6 +78,9 @@ function CreepDrivers() {
         if (creep.memory.role === 'supplier') {
             roleSupplier.run(creep);
         }
+        if(creep.memory.role==='claimer'){
+            roleClaimer.run(creep);
+        }
     }
 }
 
@@ -110,7 +115,7 @@ function BuildBuilders() {
     if (builders.length < CREEP_COUNTER['Builders']) {
         let newName = 'Builder' + Game.time;
         console.log('Spawning new builder: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, MOVE, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE], newName,
             {memory: {role: 'builder'}});
     }
 }
@@ -156,6 +161,17 @@ function BuildSuppliers() {
         console.log('Spawning new supplier: ' + newName);
         Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], newName,
             {memory: {role: 'supplier'}});
+    }
+}
+
+function BuildClaimer() {
+    let claimers = _.filter(Game.creeps, (creep) => creep.memory.role === 'claimer');
+
+    if (claimers.length < CREEP_COUNTER['Claimer']) {
+        let newName = 'Claimer' + Game.time;
+        console.log('Spawning new claimer: ' + newName);
+        Game.spawns[SPAWN].spawnCreep([CLAIM, MOVE, MOVE], newName,
+            {memory: {role: 'claimer', targetRoom:'W59S5'}});
     }
 }
 
