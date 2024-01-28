@@ -6,17 +6,21 @@ let roleRepairer = require('role.Repairer');
 let roleCollector = require('role.Collector');
 let roleSupplier = require('role.Supplier');
 let roleClaimer=require('role.Claimer');
+let roleDefender=require('role.Defender');
+let roleTombraider=require('role.Tombraider');
 
 global.SPAWN = 'Xel\'Invictus';
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 3,
+    'Upgrader': 4,
     'Builders': 0,
-    'Repairers': 1,
+    'Repairers': 3,
     'Haulers': 4,
     'Collector': 1,
-    'Supplier': 3,
+    'Supplier': 4,
     'Claimer': 0,
+    'Defender':0,
+    'Tombraider':1,
 };
 
 module.exports.loop = function () {
@@ -31,7 +35,8 @@ module.exports.loop = function () {
     BuildCollectors();
     BuildSuppliers();
     BuildClaimer();
-
+    BuildDefender()
+    BuildTombraider();
     CreepDrivers()
 }
 
@@ -81,6 +86,12 @@ function CreepDrivers() {
         if(creep.memory.role==='claimer'){
             roleClaimer.run(creep);
         }
+        if(creep.memory.role==='defender'){
+            roleDefender.run(creep);
+        }
+        if(creep.memory.role==='tombraider'){
+            roleTombraider.run(creep);
+        }
     }
 }
 
@@ -91,7 +102,7 @@ function BuildHarvesters() {
     if (harvesters.length < CREEP_COUNTER['Harvesters']) {
         let newName = 'Harvester' + Game.time;
         console.log('Spawning new harvester: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, CARRY, CARRY, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE], newName,
             {memory: {role: 'harvester'}});
     }
 }
@@ -126,7 +137,7 @@ function BuildRepairers() {
     if (repairers.length < CREEP_COUNTER['Repairers']) {
         let newName = 'Repairer' + Game.time;
         console.log('Spawning new repairer: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, MOVE, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE], newName,
             {memory: {role: 'repairer'}});
     }
 }
@@ -175,6 +186,27 @@ function BuildClaimer() {
     }
 }
 
+function BuildDefender() {
+    let defenders = _.filter(Game.creeps, (creep) => creep.memory.role === 'defender');
+
+    if (defenders.length < CREEP_COUNTER['Defender']) {
+        let newName = 'Defender' + Game.time;
+        console.log('Spawning new defender: ' + newName);
+        Game.spawns[SPAWN].spawnCreep([TOUGH, TOUGH, MOVE, MOVE, ATTACK, ATTACK], newName,
+            {memory: {role: 'defender'}});
+    }
+}
+
+function BuildTombraider() {
+    let tombraiders = _.filter(Game.creeps, (creep) => creep.memory.role === 'tombraider');
+
+    if (tombraiders.length < CREEP_COUNTER['Tombraider']) {
+        let newName = 'Tombraider' + Game.time;
+        console.log('Spawning new tombraider: ' + newName);
+        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], newName,
+            {memory: {role: 'tombraider'}});
+    }
+}
 //Get Count of all creepers through the Console
 global.GroupCreepsByRole = function () {
     // Initialize an object to store the count of creeps for each role

@@ -47,6 +47,7 @@ function FindDamagedStructures(creep) {
     //If any, return them or log that there are no structures.
     //Note: Sorting is reducing efficiency. Will keep it for some time and clean it up.
     if (structuresToRepair.length > 0) {
+        console.log("Structures to Repair: " + structuresToRepair.length)
         // structuresToRepair.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
         return structuresToRepair;
     } else {
