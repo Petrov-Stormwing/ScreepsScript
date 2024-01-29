@@ -10,7 +10,7 @@ let roleHauler = {
         if (sourceCreep && creep.store.getFreeCapacity() > 0) {
             HaulFromCreep(creep, sourceCreep);
         } else {
-            Store(creep);
+            StoreEnergy(creep);
         }
     }
 };
@@ -34,32 +34,4 @@ function FindSourceCreep(hauler) {
 
     // Return the harvester creep with the highest energy (first in the sorted array)
     return harvesters[0];
-}
-
-function Store(creep) {
-    let spawn = getSpawner(creep);
-    let extensions = getExtensions(creep);
-    let containers = getContainers(creep);
-
-    // Store in Spawner, Extension, or Container
-    if (spawn && spawn.store[RESOURCE_ENERGY] < SPAWN_ENERGY_CAPACITY) {
-        Transfer(creep, spawn);
-        return; // Exit the function after delivering to the first container
-    }
-    if (extensions.length > 0) {
-        for (let e = 0; e < extensions.length; e++) {
-            if (extensions[e].store[RESOURCE_ENERGY] < 50) {
-                Transfer(creep, extensions[e]);
-                return; // Exit the function after delivering to the first extension
-            }
-        }
-    }
-    if (containers.length > 0) {
-        for (let c = 0; c < containers.length; c++) {
-            if (containers[c].store[RESOURCE_ENERGY] < CONTAINER_CAPACITY) {
-                Transfer(creep, containers[c]);
-                return; // Exit the function after delivering to the first container
-            }
-        }
-    }
 }

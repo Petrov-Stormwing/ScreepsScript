@@ -12,14 +12,14 @@ let roleTombraider=require('role.Tombraider');
 global.SPAWN = 'Xel\'Invictus';
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 4,
+    'Upgrader': 5,
     'Builders': 0,
     'Repairers': 3,
     'Haulers': 4,
     'Collector': 1,
-    'Supplier': 4,
+    'Supplier': 5,
     'Claimer': 0,
-    'Defender':0,
+    'Defender':1,
     'Tombraider':1,
 };
 
@@ -207,6 +207,7 @@ function BuildTombraider() {
             {memory: {role: 'tombraider'}});
     }
 }
+
 //Get Count of all creepers through the Console
 global.GroupCreepsByRole = function () {
     // Initialize an object to store the count of creeps for each role
