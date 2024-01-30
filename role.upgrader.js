@@ -3,7 +3,7 @@ let roleUpgrader = {
         if(creep.store[RESOURCE_ENERGY]>0){
             Upgrade(creep);
         } else{
-            WithdrawEnergy(creep, Game.getObjectById(CONTROLLER_ENERGY_CONTAINER_I));
+            WithdrawEnergy(creep, ROOM.storage);
         }
     }
 };

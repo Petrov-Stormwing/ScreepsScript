@@ -10,6 +10,7 @@ global.StoreEnergy = StoreEnergy;
 global.Salvage = Salvage;
 global.Mine = Mine;
 global.TransferAlloys = TransferAlloys;
+global.WithdrawAlloys = WithdrawAlloys;
 
 function RechargeCreep(creep) {
     let container = getNearestContainer(creep);
@@ -88,11 +89,10 @@ function Mine(creep) {
 /**
  * Used By Tombraiders when robbing invaders corpses.
  * @param creep
+ * @param container
  */
-function TransferAlloys(creep) {
-    let container = Game.getObjectById(CONTROLLER_ENERGY_CONTAINER_II)
+function TransferAlloys(creep, container) {
     if (creep.pos.isEqualTo(container.pos)) {
-
         // Cycle through resources and deploy them into the container.
         for (const resourceType in creep.store) {
             if (resourceType !== RESOURCE_ENERGY) {
@@ -106,17 +106,32 @@ function TransferAlloys(creep) {
 }
 
 /**
+ * Useful in the later cases when working with resources.
+ * @param creep
+ * @param container
+ */
+function WithdrawAlloys(creep, container) {
+    for (const resourceType in container.store) {
+        if (resourceType !== RESOURCE_ENERGY) {
+            const withdrawResult = creep.withdraw(container, resourceType, container.store[resourceType]);
+            if (withdrawResult === ERR_NOT_IN_RANGE) {
+                creep.moveTo(container);
+            } else if (withdrawResult !== OK) {
+                // Handle any errors or edge cases
+                console.log(`Withdraw failed: ${withdrawResult}`);
+            }
+        }
+    }
+}
+
+/**
  * //General Storage Function. Prioritizes Spawn and Extensions, followed by Containers and Storage.
  * @param creep
  */
 function StoreEnergy(creep) {
     let spawn = getSpawner(creep);
     let extensions = getExtensions(creep);
-    let containers = [
-        Game.getObjectById(CONTROLLER_ENERGY_CONTAINER_I),
-        Game.getObjectById(CONTROLLER_ENERGY_CONTAINER_II)
-    ]
-    let storage=ROOM.storage
+    let storage = ROOM.storage
 
     //Supply the Spawn
     if (spawn && spawn.store[RESOURCE_ENERGY] < 300) {
@@ -130,22 +145,10 @@ function StoreEnergy(creep) {
         TransferEnergy(creep, extensions[0]);
         console.log(`Extension Energy: ${extensions[0].store[RESOURCE_ENERGY]}/${EXTENSION_ENERGY_CAPACITY[creep.room.controller.level]}`);
 
-    //Else, Supply the First Upgrader Storage
-    } else if (creep.store[RESOURCE_ENERGY] && containers[0].store.getFreeCapacity() > 0) {
-        creep.say('🔄 U-I');
-        TransferEnergy(creep, containers[0])
-        console.log(`Container I Energy: ${containers[0].store[RESOURCE_ENERGY]}`);
-
-    //Else, Supply the Second Upgrader Storage
-    } else if (containers[1] && creep.store[RESOURCE_ENERGY] && containers[1].store.getFreeCapacity() > 0) {
-        creep.say('🔄 U-II');
-        TransferEnergy(creep, containers[1])
-        console.log(`Container II Energy: ${containers[1].store[RESOURCE_ENERGY]}`);
-
     //Else, Supply the Main Storage
     } else if (storage && creep.store[RESOURCE_ENERGY]) {
         creep.say('🔄 SS');
-        TransferEnergy(creep,storage);
+        TransferEnergy(creep, storage);
         console.log(`Main Storage Energy: ${storage.store[RESOURCE_ENERGY]}`);
     }
 }

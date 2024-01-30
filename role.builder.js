@@ -30,10 +30,29 @@ function setBuildingParameter(creep) {
 }
 
 function Build(creep) {
+    //Either Build if there are sites
     let targets = creep.room.find(FIND_CONSTRUCTION_SITES);
     if (targets.length) {
         if (creep.build(targets[0]) === ERR_NOT_IN_RANGE) {
             creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
         }
+
+    //Or Reinforce Walls and Ramparts
+    }else {
+        Reinforce(creep)
+    }
+}
+
+function Reinforce(creep){
+    let defences= ROOM.find(FIND_STRUCTURES, {
+        filter: structure => {
+            return (structure.structureType === STRUCTURE_WALL
+                    || structure.structureType === STRUCTURE_RAMPART)
+                && structure.hits < 30000
+        }
+    });
+    for(let structure of defences){
+        creep.moveTo(structure);
+        creep.repair(structure);
     }
 }

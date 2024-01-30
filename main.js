@@ -19,14 +19,14 @@ global.CONTROLLER_ENERGY_CONTAINER_II = '65b8f767d93405714cd188e2';
 
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 1,
+    'Upgrader': 2,
     'Builders': 1,
     'Repairers': 2,
-    'Haulers': 4,
+    'Haulers': 5,
     'Collector': 1,
     'Supplier': 0,
     'Claimer': 0,
-    'Defender': 0,
+    'Defender': 1,
     'Tombraider': 1,
 };
 
@@ -246,7 +246,12 @@ global.GroupCreepsByRole = function () {
 function DamagedStructures() {
     if (!ROOM.memory.damagedStructures || ROOM.memory.damagedStructures.length <= 3) {
         let damagedStructures = ROOM.find(FIND_STRUCTURES, {
-            filter: structure => structure.hits < structure.hitsMax
+            filter: structure => {
+                return structure.hits < structure.hitsMax
+                    && structure.hits < 250000
+                    && structure.structureType !== STRUCTURE_WALL
+                    && structure.structureType !== STRUCTURE_RAMPART;
+            }
         });
 
         // Order the damaged structures by their hits difference
