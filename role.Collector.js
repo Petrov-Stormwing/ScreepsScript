@@ -8,6 +8,8 @@ let roleCollector = {
             if (resources && creep.store.getFreeCapacity() > 0) {
                 // console.log("Check if Resource is present: " + resources[0]);
                 ConductCollection(creep, resources)
+            } else {
+                creep.moveTo(new RoomPosition(14, 36, creep.room.name))
             }
         } else {
             StoreEnergy(creep);
@@ -68,18 +70,6 @@ function ConductCollection(creep, resources) {
                     // Handle other pickup results or errors
                     // console.log(`${currentCollector.name} encountered an issue while picking up a resource: ${pickupResult}`);
                 }
-            }
-        }
-    }
-}
-
-function CollectFromTombstone(creep, tombstones) {
-    for (let tombstone of tombstones) {
-        creep.moveTo(tombstone);
-        // Use the creep to withdraw resources from the tombstone
-        for (const resourceType in tombstone.store) {
-            if (tombstone.store[resourceType] > 0) {
-                creep.withdraw(tombstone, resourceType);
             }
         }
     }

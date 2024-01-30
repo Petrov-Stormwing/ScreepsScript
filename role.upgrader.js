@@ -1,12 +1,17 @@
 let roleUpgrader = {
     run: function (creep) {
-        Upgrade(creep);
+        if(creep.store[RESOURCE_ENERGY]>0){
+            Upgrade(creep);
+        } else{
+            WithdrawEnergy(creep, Game.getObjectById(CONTROLLER_ENERGY_CONTAINER_I));
+        }
     }
 };
 
 module.exports = roleUpgrader;
 
 function Upgrade(creep) {
-    creep.moveTo(creep.room.controller, { visualizePathStyle: { stroke: '#ffffff' } });
-    creep.upgradeController(creep.room.controller);
+    if(creep.upgradeController(creep.room.controller)===ERR_NOT_IN_RANGE) {
+        creep.moveTo(creep.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
+    }
 }

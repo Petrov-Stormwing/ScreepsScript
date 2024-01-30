@@ -9,7 +9,7 @@ let roleBuilder = {
         if (creep.memory.building) {
             Build(creep);
         } else {
-            HarvestEnergy(creep);
+            RechargeCreep(creep);
         }
     }
 };

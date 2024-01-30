@@ -8,7 +8,7 @@ let roleSupplier = {
         if (creep.memory.suppling) {
             SupplyUpgrader(creep)
         } else {
-            HarvestEnergy(creep);
+            RechargeCreep(creep);
         }
     }
 };

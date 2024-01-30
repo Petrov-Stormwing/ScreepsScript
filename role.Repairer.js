@@ -1,19 +1,16 @@
 require('ResourcesUtility');
+const _ = require('lodash');
 
 let roleRepairer = {
 
     /** @param {Creep} creep **/
     run: function (creep) {
         setRepairParameter(creep)
-        if (creep.memory.repairing) {
-            let structures = FindDamagedStructures(creep);
-            if(structures) {
-                ConductRepairs(creep, structures);
-            }else{
-                console.log("Waiting");
-            }
+        if (creep.memory.repairing && creep.store[RESOURCE_ENERGY] > 0) {
+            console.log(`Structures to Repair: ${ROOM.memory.damagedStructures.length}`)
+            ConductRepairs(creep);
         } else {
-            HarvestEnergy(creep);
+            RechargeCreep(creep);
         }
     }
 };
@@ -24,7 +21,7 @@ function setRepairParameter(creep) {
     // Check Energy Capacity - if none, stop building and go harvest
     if (creep.memory.repairing && creep.store[RESOURCE_ENERGY] === 0) {
         creep.memory.repairing = false;
-        creep.say('🔄 Harvest');
+        creep.say('🔄 Recharge');
     }
     // Reverse - if Energy Capacity is full, stop harvesting and go build
     if (!creep.memory.repairing && creep.store.getFreeCapacity() === 0) {
@@ -34,38 +31,23 @@ function setRepairParameter(creep) {
 }
 
 /**
- * Find all Structures in need of repair. Provide them sorted by percentile damage to the conducting the repair function.
+ * Commences repair based on Room.memory.damagedStructures list. Upon depletion of the list it is automatically renews from main.js
  * @param creep
- * @returns {*}
  */
-function FindDamagedStructures(creep) {
-    //Find all Structures that need repair
-    let structuresToRepair = creep.room.find(FIND_STRUCTURES, {
-        filter: structure => structure.hits < structure.hitsMax
-    });
-
-    //If any, return them or log that there are no structures.
-    //Note: Sorting is reducing efficiency. Will keep it for some time and clean it up.
-    if (structuresToRepair.length > 0) {
-        console.log("Structures to Repair: " + structuresToRepair.length)
-        // structuresToRepair.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
-        return structuresToRepair;
-    } else {
-        console.log("No STRUCTURES to repair in this room at the moment");
-    }
-}
-
-/**
- * Commences repair.
- * @param creep
- * @param structures
- */
-function ConductRepairs(creep, structures) {
+function ConductRepairs(creep) {
     let repairers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'repairer');
-    if (repairers.length > 0) {
-        for (let r = 0; r < repairers.length; r++) {
-            repairers[r].moveTo(structures[r], {visualizePathStyle: {stroke: '#ffaa00'}});
-            repairers[r].repair(structures[r]);
+    let structuresID = ROOM.memory.damagedStructures;
+    if (repairers.length > 0) for (let r = 0; r < repairers.length; r++) {
+        let structure = Game.getObjectById(structuresID[r]);
+        if(structure){
+            repairers[r].moveTo(structure, {visualizePathStyle: {stroke: '#00aa00'}});
+            repairers[r].repair(structure);
+
+            // If Repaired, Remove the structure from the list
+
+            if (structure.hits === structure.hitsMax) {
+                ROOM.memory.damagedStructures = _.without(ROOM.memory.damagedStructures, structure.id);
+            }
         }
     } else {
         console.log("No CREEPS to conduct Repairs");

@@ -14,7 +14,7 @@ const roleDefender = {
         } else {
             // If no hostiles are present, patrol the room or guard a specific location
             const patrolPoints = [
-                new RoomPosition(25, 25, creep.room.name),
+                new RoomPosition(11, 19, creep.room.name),
                 // Add more patrol points as needed
             ];
 
