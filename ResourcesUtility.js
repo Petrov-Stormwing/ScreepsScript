@@ -116,7 +116,7 @@ function StoreEnergy(creep) {
         Game.getObjectById(CONTROLLER_ENERGY_CONTAINER_I),
         Game.getObjectById(CONTROLLER_ENERGY_CONTAINER_II)
     ]
-    let storage=getStorage(creep);
+    let storage=ROOM.storage
 
     //Supply the Spawn
     if (spawn && spawn.store[RESOURCE_ENERGY] < 300) {
@@ -143,10 +143,10 @@ function StoreEnergy(creep) {
         console.log(`Container II Energy: ${containers[1].store[RESOURCE_ENERGY]}`);
 
     //Else, Supply the Main Storage
-    } else if (creep.store[RESOURCE_ENERGY]) {
+    } else if (storage && creep.store[RESOURCE_ENERGY]) {
         creep.say('🔄 SS');
         TransferEnergy(creep,storage);
-        console.log(`Main Storage Energy: ${containers[1].store[RESOURCE_ENERGY]}`);
+        console.log(`Main Storage Energy: ${storage.store[RESOURCE_ENERGY]}`);
     }
 }
 

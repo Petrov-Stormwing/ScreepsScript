@@ -3,7 +3,6 @@ global.getContainers = getContainers;
 global.getExtensions = getExtensions;
 global.getNearestContainer = getNearestContainer;
 global.getNearestExtension = getNearestExtension;
-global.getStorage = getStorage;
 
 function getSpawner(creep) {
     return creep.room.find(FIND_MY_SPAWNS)[0];
@@ -20,12 +19,6 @@ function getExtensions(creep) {
     return creep.room.find(FIND_STRUCTURES, {
         filter: (structure) => structure.structureType === STRUCTURE_EXTENSION
             && structure.store[RESOURCE_ENERGY] < EXTENSION_ENERGY_CAPACITY[creep.room.controller.level]
-    });
-}
-
-function getStorage(creep) {
-    return creep.room.find(FIND_STRUCTURES, {
-        filter: (structure) => structure.structureType === STRUCTURE_STORAGE
     });
 }
 
