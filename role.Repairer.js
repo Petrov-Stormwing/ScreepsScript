@@ -13,7 +13,7 @@ let roleRepairer = {
                 Reinforce(creep);
             }
         } else {
-            RechargeCreep(creep)
+            WithdrawEnergy(creep, ROOM.storage)
         }
     }
 };

@@ -11,16 +11,16 @@ global.WithdrawAlloys = WithdrawAlloys;
 
 /**
  * Recharges the Creeps energy to continue performing operations. Used by Builder and Repairer
+ * In rooms with NO STORAGE ONLY
  * @param creep
  */
 function RechargeCreep(creep) {
-    let container = getNearestContainer(creep);
-    console.log(`Nearest Container ID: ${container.id}, ${creep.memory.role}`)
-    if (container && container.store[RESOURCE_ENERGY] > 0) {
-        WithdrawEnergy(creep, container);
-    }
-    else{
-        WithdrawEnergy(creep, ROOM.storage);
+    let container = getContainers(creep);
+    for (container of container){
+        if(container.store[RESOURCE_ENERGY]>0){
+            WithdrawEnergy(creep, container);
+            break;
+        }
     }
 }
 
@@ -59,6 +59,35 @@ function TransferEnergy(receiver, provider) {
 }
 
 /**
+ * //General Storage Function. Prioritizes Spawn and Extensions, followed by Containers and Storage.
+ * @param creep
+ */
+function StoreEnergy(creep) {
+    let spawn = getSpawner(creep);
+    let extension = getNearestExtension(creep);
+    let storage = ROOM.storage
+
+    //Supply the Spawn
+    if (spawn && spawn.store[RESOURCE_ENERGY] < 300 && creep.store[RESOURCE_ENERGY] > 0) {
+        creep.say('🔄 S');
+        TransferEnergy(creep, spawn);
+        // console.log(`Spawner Energy: ${spawn.store[RESOURCE_ENERGY]}/${SPAWN_ENERGY_CAPACITY}`)
+
+        //Else, Supply the Extensions
+    } else if (extension && creep.store[RESOURCE_ENERGY] > 0) {
+        creep.say('🔄 E');
+        TransferEnergy(creep, extension);
+        // console.log(`Extension Energy: ${extensions[0].store[RESOURCE_ENERGY]}/${EXTENSION_ENERGY_CAPACITY[creep.room.controller.level]}`);
+
+        //Else, Supply the Main Storage
+    } else if (storage && creep.store[RESOURCE_ENERGY]) {
+        creep.say('🔄 SS');
+        TransferEnergy(creep, storage);
+        //console.log(`Main Storage Energy: ${storage.store[RESOURCE_ENERGY]}`);
+    }
+}
+
+/**
  * Used By Tombraiders when robbing invaders corpses.
  * @param creep
  * @param container
@@ -93,34 +122,5 @@ function WithdrawAlloys(creep, container) {
                 console.log(`Withdraw failed: ${withdrawResult}`);
             }
         }
-    }
-}
-
-/**
- * //General Storage Function. Prioritizes Spawn and Extensions, followed by Containers and Storage.
- * @param creep
- */
-function StoreEnergy(creep) {
-    let spawn = getSpawner(creep);
-    let extension = getNearestExtension(creep);
-    let storage = ROOM.storage
-
-    //Supply the Spawn
-    if (spawn && spawn.store[RESOURCE_ENERGY] < 300 && creep.store[RESOURCE_ENERGY] > 0) {
-        creep.say('🔄 S');
-        TransferEnergy(creep, spawn);
-        // console.log(`Spawner Energy: ${spawn.store[RESOURCE_ENERGY]}/${SPAWN_ENERGY_CAPACITY}`)
-
-    //Else, Supply the Extensions
-    } else if (extension && creep.store[RESOURCE_ENERGY] > 0) {
-        creep.say('🔄 E');
-        TransferEnergy(creep, extension);
-        // console.log(`Extension Energy: ${extensions[0].store[RESOURCE_ENERGY]}/${EXTENSION_ENERGY_CAPACITY[creep.room.controller.level]}`);
-
-    //Else, Supply the Main Storage
-    } else if (storage && creep.store[RESOURCE_ENERGY]) {
-        creep.say('🔄 SS');
-        TransferEnergy(creep, storage);
-        //console.log(`Main Storage Energy: ${storage.store[RESOURCE_ENERGY]}`);
     }
 }

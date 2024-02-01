@@ -14,7 +14,7 @@ let roleBuilder = {
                 Reinforce(creep)
             }
         } else {
-            RechargeCreep(creep);
+            WithdrawEnergy(creep, ROOM.storage);
         }
     }
 };

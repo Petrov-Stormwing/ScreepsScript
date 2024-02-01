@@ -20,9 +20,9 @@ global.CONTROLLER_ENERGY_CONTAINER_II = '65b8f767d93405714cd188e2';
 const CREEP_COUNTER = {
     'Harvesters': 4,
     'Upgrader': 4,
-    'Builders': 3,
-    'Repairers': 2,
-    'Haulers': 5,
+    'Builders': 5,
+    'Repairers': 5,
+    'Haulers': 6,
     'Collector': 1,
     'Supplier': 0,
     'Claimer': 0,
