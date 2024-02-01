@@ -2,20 +2,37 @@ require('Utils');
 const _ = require('lodash');
 
 global.RechargeCreep = RechargeCreep;
-global.WithdrawSourceContainer = WithdrawSourceContainer;
 global.WithdrawEnergy = WithdrawEnergy;
 global.TransferEnergy = TransferEnergy;
 global.DeployEnergy = DeployEnergy;
 global.StoreEnergy = StoreEnergy;
-global.Salvage = Salvage;
-global.Mine = Mine;
 global.TransferAlloys = TransferAlloys;
 global.WithdrawAlloys = WithdrawAlloys;
 
+/**
+ * Recharges the Creeps energy to continue performing operations. Used by Builder and Repairer
+ * @param creep
+ */
 function RechargeCreep(creep) {
     let container = getNearestContainer(creep);
+    console.log(`Nearest Container ID: ${container.id}, ${creep.memory.role}`)
     if (container && container.store[RESOURCE_ENERGY] > 0) {
         WithdrawEnergy(creep, container);
+    }
+    else{
+        WithdrawEnergy(creep, ROOM.storage);
+    }
+}
+
+/**
+ * Used by the Miners to deploy in the nearest Storage - right next to them.
+ * Later to be replaced by Link.
+ * @param creep
+ */
+function DeployEnergy(creep) {
+    let container = getNearestContainer(creep);
+    if (container.store.getFreeCapacity() > 0) {
+        TransferEnergy(creep, container)
     }
 }
 
@@ -38,51 +55,6 @@ function WithdrawEnergy(receiver, provider) {
 function TransferEnergy(receiver, provider) {
     if (receiver.transfer(provider, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
         receiver.moveTo(provider, {visualizePathStyle: {stroke: '#000000'}});
-    }
-}
-
-/**
- * Used for the purpose of draining energy from Ruins if present in the room.
- * @param creep
- */
-function Salvage(creep) {
-    //Find Ruins
-    let ruins = Game.rooms['W59S4'].find(FIND_RUINS);
-
-    //If Ruins in the room Exist, WithdrawEnergy existing Energy from them
-    if (ruins.length > 0) {
-        for (let ruin of ruins) {
-            if (ruin.store[RESOURCE_ENERGY] > 0) {
-                WithdrawEnergy(creep, ruin);
-                break;
-            }
-        }
-    } else {
-        console.log("No Ruins present in the room at the moment");
-    }
-}
-
-/**
- * Balanced and Optimized function to Mine from Energy Source
- * @param creep
- */
-function Mine(creep) {
-    // Check if the creep already has a source assigned
-    if (!creep.memory.sourceId) {
-        // If not, find the sources in the room
-        let sources = creep.room.find(FIND_SOURCES);
-
-        // Find the least assigned source among all creeps
-        let leastAssignedSource = _.min(sources, source => _.filter(Game.creeps, c => c.memory.sourceId === source.id).length);
-
-        // Assign the least assigned source to the creep
-        creep.memory.sourceId = leastAssignedSource.id;
-    }
-
-    // Get the assigned source based on the memory
-    let source = Game.getObjectById(creep.memory.sourceId);
-    if (source && creep.harvest(source) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(source, {visualizePathStyle: {stroke: '#ffaa00'}});
     }
 }
 
@@ -130,50 +102,25 @@ function WithdrawAlloys(creep, container) {
  */
 function StoreEnergy(creep) {
     let spawn = getSpawner(creep);
-    let extensions = getExtensions(creep);
+    let extension = getNearestExtension(creep);
     let storage = ROOM.storage
 
     //Supply the Spawn
-    if (spawn && spawn.store[RESOURCE_ENERGY] < 300) {
+    if (spawn && spawn.store[RESOURCE_ENERGY] < 300 && creep.store[RESOURCE_ENERGY] > 0) {
         creep.say('🔄 S');
         TransferEnergy(creep, spawn);
-        console.log(`Spawner Energy: ${spawn.store[RESOURCE_ENERGY]}/${SPAWN_ENERGY_CAPACITY}`)
+        // console.log(`Spawner Energy: ${spawn.store[RESOURCE_ENERGY]}/${SPAWN_ENERGY_CAPACITY}`)
 
     //Else, Supply the Extensions
-    } else if (creep.store[RESOURCE_ENERGY] > 0 && extensions.length > 0) {
+    } else if (extension && creep.store[RESOURCE_ENERGY] > 0) {
         creep.say('🔄 E');
-        TransferEnergy(creep, extensions[0]);
-        console.log(`Extension Energy: ${extensions[0].store[RESOURCE_ENERGY]}/${EXTENSION_ENERGY_CAPACITY[creep.room.controller.level]}`);
+        TransferEnergy(creep, extension);
+        // console.log(`Extension Energy: ${extensions[0].store[RESOURCE_ENERGY]}/${EXTENSION_ENERGY_CAPACITY[creep.room.controller.level]}`);
 
     //Else, Supply the Main Storage
     } else if (storage && creep.store[RESOURCE_ENERGY]) {
         creep.say('🔄 SS');
         TransferEnergy(creep, storage);
-        console.log(`Main Storage Energy: ${storage.store[RESOURCE_ENERGY]}`);
+        //console.log(`Main Storage Energy: ${storage.store[RESOURCE_ENERGY]}`);
     }
-}
-
-/**
- * Used by the Miners to deploy in the nearest Storage - right next to them.
- * Later to be replaced by Link.
- * @param creep
- */
-function DeployEnergy(creep) {
-    let container = getNearestContainer(creep);
-    if (container.store.getFreeCapacity() > 0) {
-        TransferEnergy(creep, container)
-    }
-}
-
-/**
- * Used by Haulers to take energy from the storage Container of the Harvesters only and move it elsewhere.
- * @param creep
- */
-function WithdrawSourceContainer(creep) {
-    let sources = [
-        Game.getObjectById(NORTH_ENERGY_CONTAINER),
-        Game.getObjectById(SOUTH_ENERGY_CONTAINER),
-    ];
-    sources.sort((a, b) => b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY]);
-    WithdrawEnergy(creep, sources[0]);
 }

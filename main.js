@@ -19,14 +19,14 @@ global.CONTROLLER_ENERGY_CONTAINER_II = '65b8f767d93405714cd188e2';
 
 const CREEP_COUNTER = {
     'Harvesters': 4,
-    'Upgrader': 2,
-    'Builders': 1,
+    'Upgrader': 4,
+    'Builders': 3,
     'Repairers': 2,
     'Haulers': 5,
     'Collector': 1,
     'Supplier': 0,
     'Claimer': 0,
-    'Defender': 1,
+    'Defender': 2,
     'Tombraider': 1,
 };
 
@@ -57,7 +57,7 @@ function CreepDrivers() {
     }
 
     //Set list of Damage buildings
-    DamagedStructures()
+    DamagedStructures();
 
     //Say what you build, Spawner
     if (Game.spawns[SPAWN].spawning) {
@@ -136,7 +136,7 @@ function BuildBuilders() {
     if (builders.length < CREEP_COUNTER['Builders']) {
         let newName = 'Builder' + Game.time;
         console.log('Spawning new builder: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], newName,
             {memory: {role: 'builder'}});
     }
 }
@@ -202,7 +202,7 @@ function BuildDefender() {
     if (defenders.length < CREEP_COUNTER['Defender']) {
         let newName = 'Defender' + Game.time;
         console.log('Spawning new defender: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([TOUGH, TOUGH, MOVE, MOVE, ATTACK, ATTACK], newName,
+        Game.spawns[SPAWN].spawnCreep([TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK], newName,
             {memory: {role: 'defender'}});
     }
 }

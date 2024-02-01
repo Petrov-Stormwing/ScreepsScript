@@ -1,5 +1,5 @@
 require('ResourcesUtility');
-const _ = require('lodash');
+require('Utils');
 
 let roleRepairer = {
 
@@ -7,10 +7,13 @@ let roleRepairer = {
     run: function (creep) {
         setRepairParameter(creep)
         if (creep.memory.repairing) {
-            console.log(`Structures to Repair: ${ROOM.memory.damagedStructures.length}`)
-            ConductRepairs(creep);
+            if (ROOM.memory.damagedStructures.length > 0) {
+                Repair(creep);
+            } else {
+                Reinforce(creep);
+            }
         } else {
-            RechargeCreep(creep);
+            RechargeCreep(creep)
         }
     }
 };

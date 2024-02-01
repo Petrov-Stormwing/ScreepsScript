@@ -7,6 +7,7 @@ const roleTombraider = {
         if (creep.store.getFreeCapacity() > 0) {
             Tombraiding(creep);
         } else {
+            console.log(`Energy ${creep.store[RESOURCE_ENERGY]}`)
             if (creep.store[RESOURCE_ENERGY]>0) {
                 StoreEnergy(creep);
             } else if (creep.store.getUsedCapacity() !== 0) {
@@ -20,9 +21,7 @@ module.exports = roleTombraider;
 
 function Tombraiding(creep) {
     // Find tombstones with resources
-    let tombstones = creep.room.find(FIND_TOMBSTONES, {
-        filter: tombstone => tombstone.store && Object.keys(tombstone.store).length > 0
-    });
+    let tombstones = getTombstones(creep)
 
     if (tombstones.length > 0) {
         console.log("Number of Tombstones: " + tombstones.length)
@@ -32,6 +31,6 @@ function Tombraiding(creep) {
             creep.moveTo(tombstones[0], {visualizePathStyle: {stroke: '#ffaa00'}});
         }
     } else {
-        creep.moveTo(new RoomPosition(16, 36, creep.room.name))
+        creep.moveTo(new RoomPosition(16, 36, ROOM.name))
     }
 }

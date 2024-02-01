@@ -9,7 +9,7 @@ let roleCollector = {
                 // console.log("Check if Resource is present: " + resources[0]);
                 ConductCollection(creep, resources)
             } else {
-                creep.moveTo(new RoomPosition(14, 36, creep.room.name))
+                creep.moveTo(new RoomPosition(14, 36, ROOM.name))
             }
         } else {
             StoreEnergy(creep);
