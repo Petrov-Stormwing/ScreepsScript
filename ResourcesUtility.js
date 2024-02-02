@@ -93,7 +93,7 @@ function StoreEnergy(creep) {
  * @param container
  */
 function TransferAlloys(creep, container) {
-    if (creep.pos.isEqualTo(container.pos)) {
+    if (creep.pos.isNearTo(container.pos)) {
         // Cycle through resources and deploy them into the container.
         for (const resourceType in creep.store) {
             if (resourceType !== RESOURCE_ENERGY) {
@@ -114,7 +114,7 @@ function TransferAlloys(creep, container) {
 function WithdrawAlloys(creep, container) {
     for (const resourceType in container.store) {
         if (resourceType !== RESOURCE_ENERGY) {
-            const withdrawResult = creep.withdraw(container, resourceType, container.store[resourceType]);
+            const withdrawResult = creep.withdraw(container, resourceType);
             if (withdrawResult === ERR_NOT_IN_RANGE) {
                 creep.moveTo(container);
             } else if (withdrawResult !== OK) {

@@ -5,15 +5,23 @@ let roleRepairer = {
 
     /** @param {Creep} creep **/
     run: function (creep) {
-        setRepairParameter(creep)
+        setRepairParameter(creep);
+        let storage = Game.rooms['W59S4'].storage;
+
         if (creep.memory.repairing) {
+            console.log(ROOM.memory.damagedStructures.length);
             if (ROOM.memory.damagedStructures.length > 0) {
+                creep.say('🚧 Repair');
                 Repair(creep);
             } else {
                 Reinforce(creep);
             }
         } else {
-            WithdrawEnergy(creep, ROOM.storage)
+            creep.say('🔄 Recharge');
+
+            if (creep.withdraw(storage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                creep.moveTo(storage, {visualizePathStyle: {stroke: '#ffaa00'}});
+            }
         }
     }
 };
