@@ -9,6 +9,7 @@ let roleSupplier = require('role.Supplier');
 let roleClaimer = require('role.Claimer');
 let roleDefender = require('role.Defender');
 let roleTombraider = require('role.Tombraider');
+let roleRanger = require('role.Ranger');
 
 global.ROOM = Game.rooms['W59S4'];
 global.SPAWN = 'Xel\'Invictus';
@@ -26,7 +27,8 @@ const CREEP_COUNTER = {
     'Collector': 1,
     'Supplier': 0,
     'Claimer': 0,
-    'Defender': 1,
+    'Defender': 0,
+    'Ranger': 0,
     'Tombraider': 1,
 };
 
@@ -34,17 +36,20 @@ module.exports.loop = function () {
     const utils = require('Utils');
     const ResourcesUtility = require('ResourcesUtility');
 
-    BuildHarvesters();
-    BuildUpgraders();
-    BuildBuilders();
-    BuildRepairers();
-    BuildHauler();
-    BuildCollectors();
-    BuildSuppliers();
-    BuildClaimer();
-    BuildDefender()
-    BuildTombraider();
-    CreepDrivers()
+    if (Game.rooms['W59S4'].find(FIND_HOSTILE_CREEPS).length === 0) {
+        BuildHarvesters();
+        BuildUpgraders();
+        BuildBuilders();
+        BuildRepairers();
+        BuildHauler();
+        BuildCollectors();
+        BuildSuppliers();
+        BuildClaimer();
+        BuildDefender()
+        BuildRanger()
+        BuildTombraider();
+        CreepDrivers()
+    }
 }
 
 function CreepDrivers() {
@@ -58,6 +63,7 @@ function CreepDrivers() {
 
     //Set list of Damage buildings
     DamagedStructures();
+    console.log(`Structures to Repair: ${ROOM.memory.damagedStructures.length}`)
 
     //Say what you build, Spawner
     if (Game.spawns[SPAWN].spawning) {
@@ -101,6 +107,9 @@ function CreepDrivers() {
         }
         if (creep.memory.role === 'tombraider') {
             roleTombraider.run(creep);
+        }
+        if (creep.memory.role === 'ranger') {
+            roleRanger.run(creep);
         }
     }
 }
@@ -204,6 +213,17 @@ function BuildDefender() {
         console.log('Spawning new defender: ' + newName);
         Game.spawns[SPAWN].spawnCreep([TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK], newName,
             {memory: {role: 'defender'}});
+    }
+}
+
+function BuildRanger() {
+    let rangers = _.filter(Game.creeps, (creep) => creep.memory.role === 'ranger');
+
+    if (rangers.length < CREEP_COUNTER['Ranger']) {
+        let newName = 'Ranger' + Game.time;
+        console.log('Spawning new ranger: ' + newName);
+        Game.spawns[SPAWN].spawnCreep([TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK], newName,
+            {memory: {role: 'ranger'}});
     }
 }
 

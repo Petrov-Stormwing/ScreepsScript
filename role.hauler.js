@@ -4,14 +4,9 @@ let roleHauler = {
 
     /** @param {Creep} creep **/
     run: function (creep) {
-        if (creep.store.getFreeCapacity() > 0) {
-            let sources = [
-                Game.getObjectById(NORTH_ENERGY_CONTAINER),
-                Game.getObjectById(SOUTH_ENERGY_CONTAINER),
-            ];
-            sources.sort((a, b) => b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY]);
-
-            WithdrawEnergy(creep,sources[0]);
+        setHaulerParameter(creep)
+        if (creep.memory.hauling) {
+            Haul(creep);
         } else {
             StoreEnergy(creep);
         }
@@ -19,3 +14,16 @@ let roleHauler = {
 };
 
 module.exports = roleHauler;
+
+function setHaulerParameter(creep) {
+    // Check Energy Capacity - if none, stop building and go harvest
+    if (creep.memory.hauling && creep.store.getFreeCapacity() === 0) {
+        creep.memory.hauling = false;
+        creep.say('🔄 Reload');
+    }
+    // Reverse - if Energy Capacity is full, stop harvesting and go build
+    if (!creep.memory.hauling && creep.store.getUsedCapacity() === 0) {
+        creep.memory.hauling = true;
+        creep.say('🚧 Haul');
+    }
+}

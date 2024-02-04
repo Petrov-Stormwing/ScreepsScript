@@ -1,6 +1,6 @@
 require('Utils')
 
-const roleDefender = {
+const roleRanger = {
     /** @param {Creep} creep **/
     run: function (creep) {
 
@@ -11,9 +11,9 @@ const roleDefender = {
         // if (hostiles.length > 0) {
         //     Attack(creep,hostiles)
         // } else {
-            Defend(creep,hostiles)
+        Defend(creep,hostiles)
         // }
     }
 };
 
-module.exports = roleDefender;
+module.exports = roleRanger;

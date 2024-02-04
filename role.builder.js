@@ -6,7 +6,7 @@ let roleBuilder = {
     /** @param {Creep} creep **/
     run: function (creep) {
         setBuildingParameter(creep)
-        let constructions = ROOM.find(FIND_CONSTRUCTION_SITES);
+        let constructions = creep.room.find(FIND_CONSTRUCTION_SITES);
         if (creep.memory.building) {
             if (constructions.length > 0) {
                 Build(creep, constructions);

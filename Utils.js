@@ -17,6 +17,8 @@ global.Upgrade = Upgrade;
 global.Attack = Attack;
 global.Defend = Defend;
 global.Tombraiding = Tombraiding;
+global.ConductCollection = ConductCollection;
+global.Haul = Haul;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
@@ -29,12 +31,13 @@ const BUILD_PATH = {visualizePathStyle: {stroke: '#53035c'}};
 const TOMBRAIDING_PATH = {visualizePathStyle: {stroke: '#000000'}};
 
 //Constants for this File
-const REINFORCE_LEVEL = 25000;
+const REINFORCE_LEVEL = 30000;
 const RAMPART = [
     new RoomPosition(11, 19, Game.rooms['W59S4'].name),
-    new RoomPosition(20, 46, Game.rooms['W59S4'].name),
-    new RoomPosition(11, 42, Game.rooms['W59S4'].name),
-    new RoomPosition(6, 35, Game.rooms['W59S4'].name),
+    new RoomPosition(23, 13, Game.rooms['W59S4'].name),
+    // new RoomPosition(11, 42, Game.rooms['W59S4'].name),
+    // new RoomPosition(6, 35, Game.rooms['W59S4'].name),
+    // new RoomPosition(12, 20, Game.rooms['W59S4'].name),
 ];
 
 function getSpawner(creep) {
@@ -78,16 +81,6 @@ function getNearestContainer(creep) {
 // Find nearest single extension in the room
 function getNearestExtension(creep) {
     let extensions = getExtensions(creep)
-    if (extensions.length > 0) {
-        return creep.pos.findClosestByPath(extensions);
-    } else {
-        //console.log(`No Empty Extensions in Room: ${creep.room.name}`)
-    }
-}
-
-// Find nearest single extension in the room
-function getNearestTombstone(creep) {
-    let extensions = getTombstones(creep)
     if (extensions.length > 0) {
         return creep.pos.findClosestByPath(extensions);
     } else {
@@ -176,7 +169,6 @@ function Repair(creep) {
     //Get repair Creeps and the structure IDs from room memory
     let repairers = getCreepsByRole(creep, 'repairer')
     let structuresID = ROOM.memory.damagedStructures;
-    console.log(`Structures to Repair: ${ROOM.memory.damagedStructures.length}`)
 
     //If there are creeps available, cycle through the IDs and give each repairer an object to repair.
     if (repairers.length > 0) {
@@ -185,19 +177,15 @@ function Repair(creep) {
 
             //Either Repair or Remove from Memory
             if (structure) {
-                // Room.memory.CurrentlyReparing++;
                 if (repairers[r].repair(structure) === ERR_NOT_IN_RANGE)
                     repairers[r].moveTo(structure, REPAIR_PATH);
             } else {
-                console.log(structure);
-                console.log(structuresID[r]);
                 ROOM.memory.damagedStructures = _.without(ROOM.memory.damagedStructures, structuresID[r]);
             }
 
             // If Repaired, Remove the structure from the list
             if (structure.hits === structure.hitsMax) {
                 ROOM.memory.damagedStructures = _.without(ROOM.memory.damagedStructures, structure.id);
-                // Room.memory.CurrentlyReparing--;
             }
         }
     } else {
@@ -238,15 +226,19 @@ function Attack(creep, hostiles) {
 
 function Defend(creep, hostiles) {
     let defenders = Object.values(Game.creeps).filter(creep => creep.memory.role === 'defender');
+    let rangers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'ranger');
     for (let d = 0; d < defenders.length; d++) {
         if (defenders[d].pos !== RAMPART[d]) {
             defenders[d].moveTo(RAMPART[d], DEFENCE_PATH)
-
+            rangers[d].moveTo(new RoomPosition(RAMPART[d].x + 1, RAMPART[d].y + 1, Game.rooms['W59S4'].name), DEFENCE_PATH)
             // Find hostile creeps in range
             let hostileCreepsInRange = defenders[d].pos.findInRange(FIND_HOSTILE_CREEPS, 3); // Adjust the range as needed
 
-            if (hostileCreepsInRange.length > 0) {
-                // Attack the closest hostile creep
+            if (hostileCreepsInRange.length > 0 && defenders[d].memory.role === 'ranger') {
+                // Range Attack the closest hostile creep
+                let targetCreep = defenders[d].pos.findClosestByRange(hostileCreepsInRange);
+                defenders[d].rangedAttack(targetCreep);
+            } else {
                 let targetCreep = defenders[d].pos.findClosestByRange(hostileCreepsInRange);
                 defenders[d].attack(targetCreep);
             }
@@ -254,6 +246,10 @@ function Defend(creep, hostiles) {
     }
 }
 
+/**
+ * Raids Tombstones in the room and takes all their belongings
+ * @param creep
+ */
 function Tombraiding(creep) {
     // Find tombstones with resources
     let tombstones = getTombstones(creep)
@@ -269,4 +265,42 @@ function Tombraiding(creep) {
         creep.say('🔄 Idle');
         creep.moveTo(new RoomPosition(16, 36, ROOM.name))
     }
+}
+
+/**
+ * Conducts Collection of dropped resources
+ * @param creep
+ */
+function ConductCollection(creep) {
+    // Find all dropped resources in the room
+    const droppedResources = creep.room.find(FIND_DROPPED_RESOURCES);
+
+    // Filter out undefined or null resources
+    const validDroppedResources = droppedResources.filter(resource => resource);
+
+    if (validDroppedResources.length > 0) {
+        // Choose the closest dropped resource and move towards it
+        const closestResource = creep.pos.findClosestByRange(validDroppedResources);
+        if (creep.pickup(closestResource) === ERR_NOT_IN_RANGE) {
+            creep.moveTo(closestResource, {visualizePathStyle: {stroke: '#ffaa00'}});
+        }
+    } else {
+        // Handle the case when there are no  dropped valid resources
+        creep.say('🔄 Idle');
+        creep.moveTo(new RoomPosition(14, 36, ROOM.name));
+    }
+}
+
+/**
+ * Conducts Hauling of energy in case Link is not available
+ * @param creep
+ */
+function Haul(creep) {
+    let sources = [
+        Game.getObjectById(NORTH_ENERGY_CONTAINER),
+        Game.getObjectById(SOUTH_ENERGY_CONTAINER),
+    ];
+    sources.sort((a, b) => b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY]);
+
+    WithdrawEnergy(creep, sources[0]);
 }
