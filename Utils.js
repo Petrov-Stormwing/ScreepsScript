@@ -19,6 +19,8 @@ global.Defend = Defend;
 global.Tombraiding = Tombraiding;
 global.ConductCollection = ConductCollection;
 global.Haul = Haul;
+global.ReserveController = ReserveController;
+global.ClaimController = ClaimController;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
@@ -94,6 +96,25 @@ function getCreepsByRole(creep, role) {
         creep => creep.memory.role === role);
 }
 
+function getSource(creep) {
+    let sourceIDs = [];
+
+    // Get Energy Sources
+    let sources = creep.room.find(FIND_SOURCES);
+    sourceIDs = sources.map(source => source.id);
+
+    // Get Mineral Sources
+    let extractors = creep.room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_EXTRACTOR
+    });
+    if (extractors.length) {
+        sourceIDs.push(extractors[0].id);
+    }
+
+    return sourceIDs;
+}
+
+
 /**
  * Balanced and Optimized function to Mine from Energy Source
  * @param creep
@@ -103,6 +124,9 @@ function Mine(creep) {
     if (!creep.memory.sourceId) {
         // If not, find the sources in the room
         let sources = creep.room.find(FIND_SOURCES);
+        // Find all extractors in the current room
+        let extractors = creep.room.find(FIND_MINERALS);
+        sources.push(extractors[0]);
 
         // Find the least assigned source among all creeps
         let leastAssignedSource = _.min(sources, source => _.filter(Game.creeps, c => c.memory.sourceId === source.id).length);
@@ -116,7 +140,38 @@ function Mine(creep) {
     if (source && creep.harvest(source) === ERR_NOT_IN_RANGE) {
         creep.moveTo(source, MINE_PATH);
     }
+    //the extractor requires explicit position declaration.
+    else{
+        if (source.id==="65bf91ec812dc9d43d765b57"){
+            creep.moveTo(source.pos, MINE_PATH);
+            let mineral=Game.getObjectById('5bbcb10040062e4259e929dc')
+            // The deposit is ready for harvesting again
+            creep.harvest(mineral);
+        }
+        // console.log(source.ticksToRegeneration === 0)
+        // console.log(source.id)
+    }
 }
+
+function HarvestFromExtractors(creep) {
+    // Find all extractors in the current room
+    let extractors = creep.room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_EXTRACTOR
+    });
+
+    if (extractors.length > 0) {
+        // Check if the creep is at the extractor, if not, move to it
+        if (!creep.pos.isNearTo(extractors[0])) {
+            creep.moveTo(extractors[0], {visualizePathStyle: {stroke: '#ffaa00'}});
+        } else {
+            // Harvest from the extractor
+            creep.harvest(extractors[0]);
+        }
+    } else {
+        console.log("No extractors found in the room.");
+    }
+}
+
 
 /**
  * Used for the purpose of draining energy from Ruins if present in the room.
@@ -234,13 +289,13 @@ function Defend(creep, hostiles) {
             // Find hostile creeps in range
             let hostileCreepsInRange = defenders[d].pos.findInRange(FIND_HOSTILE_CREEPS, 3); // Adjust the range as needed
 
-            if (hostileCreepsInRange.length > 0 && defenders[d].memory.role === 'ranger') {
+            if (hostiles.length > 0 && creep.memory.role === 'ranger') {
                 // Range Attack the closest hostile creep
-                let targetCreep = defenders[d].pos.findClosestByRange(hostileCreepsInRange);
-                defenders[d].rangedAttack(targetCreep);
+                let targetCreep = creep.pos.findClosestByRange(hostileCreepsInRange);
+                creep.rangedAttack(targetCreep);
             } else {
-                let targetCreep = defenders[d].pos.findClosestByRange(hostileCreepsInRange);
-                defenders[d].attack(targetCreep);
+                let targetCreep = creep.pos.findClosestByRange(hostileCreepsInRange);
+                creep.attack(targetCreep);
             }
         }
     }
@@ -303,4 +358,66 @@ function Haul(creep) {
     sources.sort((a, b) => b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY]);
 
     WithdrawEnergy(creep, sources[0]);
+}
+
+/**
+ * Function to reserve the controller. Required if Neutral
+ * @param creep
+ */
+function ReserveController(creep) {
+    let controller = creep.room.controller;
+
+    if (controller) {
+        if (creep.pos.inRangeTo(controller, 1)) {
+            // Reserve the controller
+            let reserveResult = creep.reserveController(controller);
+            console.log('Reserve Result:', reserveResult);
+            return reserveResult;
+        } else {
+            // Move closer to the controller
+            let moveResult = creep.moveTo(controller, {visualizePathStyle: {stroke: '#650a65'}});
+            console.log('Move Result:', moveResult);
+        }
+    } else {
+        // Handle the case when the controller is not present (optional)
+        console.log("No controller found in the room.");
+    }
+}
+
+/**
+ * Function to Claim the controller.
+ * @param creep
+ */
+function ClaimController(creep) {
+    let controller = creep.room.controller;
+
+    if (controller) {
+        if (creep.pos.inRangeTo(controller, 1)) {
+            // Claim the controller
+            console.log("Claiming Controller: In Progress...")
+            let result = creep.claimController(controller);
+            console.log("Claiming Controller Result: " + result);
+        } else {
+            // Move closer to the controller
+            creep.moveTo(controller, {visualizePathStyle: {stroke: '#650a65'}});
+        }
+    } else {
+        // Handle the case when the controller is not present (optional)
+        console.log("No controller found in the room.");
+    }
+}
+
+function LinkStorageEnergy(creep) {
+    let link = creep.room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_LINK
+    });
+    let storage = Game.rooms[ROOM.name].storage;
+    console.log(storage.store[RESOURCE_ENERGY]);
+    if (link && storage) {
+        // Check if the link has energy
+        if (link.energy > 0) {
+            // Transfer energy from the link to storage
+            link.transferEnergy(storage);
+        }
+    }
 }

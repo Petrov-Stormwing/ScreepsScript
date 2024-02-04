@@ -19,16 +19,16 @@ global.CONTROLLER_ENERGY_CONTAINER_I = '65b7fc77ba73c30e2e6a9e67';
 global.CONTROLLER_ENERGY_CONTAINER_II = '65b8f767d93405714cd188e2';
 
 const CREEP_COUNTER = {
-    'Harvesters': 4,
-    'Upgrader': 4,
-    'Builders': 3,
+    'Harvesters': 3,
+    'Upgrader': 1,
+    'Builders': 1,
     'Repairers': 3,
-    'Haulers': 5,
+    'Haulers': 4,
     'Collector': 1,
     'Supplier': 0,
     'Claimer': 0,
-    'Defender': 0,
-    'Ranger': 0,
+    'Defender': 1,
+    'Ranger': 1,
     'Tombraider': 1,
 };
 
@@ -36,20 +36,20 @@ module.exports.loop = function () {
     const utils = require('Utils');
     const ResourcesUtility = require('ResourcesUtility');
 
-    if (Game.rooms['W59S4'].find(FIND_HOSTILE_CREEPS).length === 0) {
-        BuildHarvesters();
-        BuildUpgraders();
-        BuildBuilders();
-        BuildRepairers();
-        BuildHauler();
-        BuildCollectors();
-        BuildSuppliers();
-        BuildClaimer();
-        BuildDefender()
-        BuildRanger()
-        BuildTombraider();
-        CreepDrivers()
-    }
+    // if (Game.rooms['W59S4'].find(FIND_HOSTILE_CREEPS).length === 0) {
+    BuildHarvesters();
+    BuildUpgraders();
+    BuildBuilders();
+    BuildRepairers();
+    BuildHauler();
+    BuildCollectors();
+    BuildSuppliers();
+    BuildClaimer();
+    BuildDefender()
+    BuildRanger()
+    BuildTombraider();
+    CreepDrivers()
+    // }
 }
 
 function CreepDrivers() {
@@ -121,7 +121,7 @@ function BuildHarvesters() {
     if (harvesters.length < CREEP_COUNTER['Harvesters']) {
         let newName = 'Harvester' + Game.time;
         console.log('Spawning new harvester: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, CARRY, MOVE], newName,
+        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE], newName,
             {memory: {role: 'harvester'}});
     }
 }

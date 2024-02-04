@@ -7,9 +7,14 @@ let roleCollector = {
             creep.say('🔄 Collecting');
             ConductCollection(creep);
             // Haul(creep);
+            // WithdrawEnergy(creep, Game.getObjectById('65ba9d6b509bc249470a5d24'));
         } else {
-            creep.say('🚧 Storing');
-            StoreEnergy(creep);
+            creep.say('🔄 Deploy');
+            if (creep.store[RESOURCE_ENERGY] > 0) {
+                StoreEnergy(creep);
+            } else if (creep.store.getUsedCapacity() > 0) {
+                TransferAlloys(creep, ROOM.storage);
+            }
         }
     }
 };

@@ -13,7 +13,7 @@ const roleTombraider = {
             if (creep.store[RESOURCE_ENERGY] > 0) {
                 StoreEnergy(creep);
             } else if (creep.store.getUsedCapacity() > 0) {
-                TransferAlloys(creep, Game.getObjectById(CONTROLLER_ENERGY_CONTAINER_II));
+                TransferAlloys(creep, ROOM.storage);
             }
         }
     }

@@ -80,9 +80,10 @@ function StoreEnergy(creep) {
         // console.log(`Extension Energy: ${extensions[0].store[RESOURCE_ENERGY]}/${EXTENSION_ENERGY_CAPACITY[creep.room.controller.level]}`);
 
         //Else, Supply the Main Storage
-    } else if (storage && creep.store[RESOURCE_ENERGY]) {
+    } else if (storage && (creep.store[RESOURCE_ENERGY] || creep.store.getUsedCapacity() > 0)) {
         creep.say('🔄 SS');
         TransferEnergy(creep, storage);
+        TransferAlloys(creep,storage);
         //console.log(`Main Storage Energy: ${storage.store[RESOURCE_ENERGY]}`);
     }
 }
