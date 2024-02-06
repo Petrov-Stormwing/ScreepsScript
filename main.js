@@ -23,16 +23,16 @@ const roomData = {
         'spawner': 'Xel\'Invictus',
         'creepCounts': {
             'harvester': Memory.rooms['W59S4'].sourceIDs.length,
-            'repairer': Math.min(1,Memory.rooms['W59S4'].damagedStructures.length/25,),
-            'upgrader': Math.min(1,Game.rooms['W59S4'].storage[RESOURCE_ENERGY]/100000),
-            'builder': 2,
-            'hauler': 4,
+            'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 25),
+            'upgrader': Math.max(1, Game.rooms['W59S4'].storage[RESOURCE_ENERGY] / 100000),
+            'builder': 1,
+            'hauler': 2,
             'collector': 1,
             'tombraider': 1,
             'defender': 1,
             'ranger': 1,
             'claimer': 0,
-            'supplier': 0,
+            'supplier': 1,
             // Add more roles and counts as needed for the Room
         }
     },
@@ -130,7 +130,8 @@ function CreepDrivers() {
 
     //Define Memory Data
     getDamagedStructures();
-    getSources()
+    getSources();
+    getLinkTransfer();
 
     // Define a mapping of roles to role functions
     const roleFunctions = {
@@ -183,6 +184,9 @@ function getDamagedStructures() {
     }
 }
 
+/**
+ * Gathers all Source IDs, including Mineral Deposits that have Extractor constructed and are not Regenerating.
+ */
 function getSources() {
     for (let roomName in Game.rooms) {
         //Get the Room Object from the name.
@@ -203,6 +207,32 @@ function getSources() {
         // Map the IDs of all sources to Memory and print to Console
         Memory.rooms[roomName].sourceIDs = allSources.map(source => source.id);
         console.log(`Sources Count [${roomName}]: ${Memory.rooms[roomName].sourceIDs.length}`)
+    }
+}
+
+/**
+ * Automatically transfers the Energy within the Link to the Receiving Link at the Storage.
+ * It is based on defined room in the RoomData Object as the Owned Room may have neither Link nor Storage.
+ */
+function getLinkTransfer() {
+    for (let roomName in roomData) {
+        let room = Game.rooms[roomName];
+        let links = room.find(FIND_MY_STRUCTURES, {
+            filter: structure => structure.structureType === STRUCTURE_LINK
+        });
+
+        // Find the closest link to storage
+        let closestLinkToStorage = room.storage.pos.findClosestByRange(links);
+        links = _.without(links, closestLinkToStorage);
+        for (let link of links) {
+            if (closestLinkToStorage.energy === 0 && link.energy >= 750) {
+                room.visual.line(link.pos.x, link.pos.y, closestLinkToStorage.pos.x, closestLinkToStorage.pos.y, {
+                    color: 'white',
+                    lineStyle: 'dashed'
+                });
+                link.transferEnergy(closestLinkToStorage);
+            }
+        }
     }
 }
 

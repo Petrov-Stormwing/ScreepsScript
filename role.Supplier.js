@@ -6,9 +6,9 @@ let roleSupplier = {
     run: function (creep) {
         setSupplierParameters(creep)
         if (creep.memory.suppling) {
-            SupplyUpgrader(creep)
+            TransferEnergy(creep, creep.room.storage);
         } else {
-            RechargeCreep(creep);
+            WithdrawEnergy(creep, Game.getObjectById('65c28768c5111521aad4be4d'));
         }
     }
 };

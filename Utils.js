@@ -102,26 +102,26 @@ function getCreepsByRole(creep, role) {
  * @param creep
  */
 function Mine(creep) {
-    // Check if the creep already has a source assigned. If not - Assign one
-    if (!creep.memory.sourceId) {
-        let sources = Object.values(Memory.rooms[creep.room.name].sourceIDs)
-        // Find the least assigned source in the room with no Creep on it and Assign the least assigned source to the creep
-        creep.memory.sourceId = _.min(sources, sourceId => {
-            return _.filter(Game.creeps, c => c.memory.role === 'harvester' && c.memory.sourceId === sourceId).length;
-        });
-    }
+    try {
+        // Check if the creep already has a source assigned. If not - Assign one
+        if (!creep.memory.sourceId) {
+            let sources = Object.values(Memory.rooms[creep.room.name].sourceIDs)
+            // Find the least assigned source in the room with no Creep on it and Assign the least assigned source to the creep
+            creep.memory.sourceId = _.min(sources, sourceId => {
+                return _.filter(Game.creeps, c => c.memory.role === 'harvester' && c.memory.sourceId === sourceId).length;
+            });
+        }
 
-    // Get the assigned source based on the creep.memory and move the creep to it.
-    let source = Game.getObjectById(creep.memory.sourceId);
-    let harvest = creep.harvest(source);
-    if (harvest === ERR_NOT_IN_RANGE) {
-        creep.moveTo(source, MINE_PATH);
-        return 1;
-    } else {
-        return 0;
+        // Get the assigned source based on the creep.memory and move the creep to it.
+        let source = Game.getObjectById(creep.memory.sourceId);
+        let harvest = creep.harvest(source);
+        if (harvest === ERR_NOT_IN_RANGE) {
+            creep.moveTo(source, MINE_PATH);
+        }
+    } catch (error) {
+        console.log(`Error while mining: ${error}`);
     }
 }
-
 
 /**
  * Used for the purpose of draining energy from Ruins if present in the room.
@@ -308,14 +308,12 @@ function ConductCollection(creep) {
  */
 function Haul(creep) {
     let sources = [
-        Game.getObjectById(NORTH_ENERGY_CONTAINER),
-        Game.getObjectById(SOUTH_ENERGY_CONTAINER),
-        // Game.getObjectById(ZYNTHIUM_CONTAINER),
+        Game.getObjectById(ZYNTHIUM_CONTAINER),
     ];
-    sources.sort((a, b) => b.store.getUsedCapacity() - a.store.getUsedCapacity());
-
-    WithdrawEnergy(creep, sources[0]);
-    WithdrawAlloys(creep, sources[0]);
+    if(sources[0].store.getUsedCapacity()>1000){
+        WithdrawAlloys(creep, sources[0]);
+        WithdrawEnergy(creep, sources[0]);
+    }
 }
 
 /**
@@ -362,20 +360,5 @@ function ClaimController(creep) {
     } else {
         // Handle the case when the controller is not present (optional)
         console.log("No controller found in the room.");
-    }
-}
-
-function LinkStorageEnergy(creep) {
-    let link = creep.room.find(FIND_STRUCTURES, {
-        filter: structure => structure.structureType === STRUCTURE_LINK
-    });
-    let storage = Game.rooms[ROOM.name].storage;
-    console.log(storage.store[RESOURCE_ENERGY]);
-    if (link && storage) {
-        // Check if the link has energy
-        if (link.energy > 0) {
-            // Transfer energy from the link to storage
-            link.transferEnergy(storage);
-        }
     }
 }

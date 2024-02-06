@@ -17,9 +17,7 @@ let roleRepairer = {
             }
         } else {
             creep.say('🔄 Recharge');
-            if (creep.withdraw(storage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(storage, {visualizePathStyle: {stroke: '#ffaa00'}});
-            }
+            WithdrawEnergy(creep, storage)
         }
     }
 };

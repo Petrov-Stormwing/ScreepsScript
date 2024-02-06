@@ -5,6 +5,7 @@ global.RechargeCreep = RechargeCreep;
 global.WithdrawEnergy = WithdrawEnergy;
 global.TransferEnergy = TransferEnergy;
 global.DeployEnergy = DeployEnergy;
+global.DeployToLink = DeployToLink;
 global.StoreEnergy = StoreEnergy;
 global.TransferAlloys = TransferAlloys;
 global.WithdrawAlloys = WithdrawAlloys;
@@ -36,6 +37,16 @@ function DeployEnergy(creep) {
     }
 }
 
+function DeployToLink(creep){
+    let link = creep.pos.findInRange(FIND_MY_STRUCTURES, 1, {
+        filter: structure => structure.structureType === STRUCTURE_LINK
+    })[0];
+    if (link && link.energy < link.energyCapacity) {
+        if (creep.transfer(link, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+            creep.moveTo(link);
+        }
+    }
+}
 /**
  * Universal WithdrawEnergy of Energy between Creeps and Structure.
  * @param receiver - The empty object.

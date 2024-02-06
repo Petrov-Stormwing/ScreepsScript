@@ -6,7 +6,8 @@ let roleHauler = {
     run: function (creep) {
         setHaulerParameter(creep)
         if (creep.memory.hauling) {
-            Haul(creep);
+            // Haul(creep);
+            WithdrawEnergy(creep, ROOM.storage);
         } else {
             StoreEnergy(creep);
         }
