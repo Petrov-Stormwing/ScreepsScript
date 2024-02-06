@@ -120,6 +120,7 @@ function getSource(creep) {
  * @param creep
  */
 function Mine(creep) {
+    creep.memory.sourceId = 0;
     // Check if the creep already has a source assigned
     if (!creep.memory.sourceId) {
         // If not, find the sources in the room
@@ -138,21 +139,14 @@ function Mine(creep) {
     // Get the assigned source based on the memory
     let source = Game.getObjectById(creep.memory.sourceId);
     let harvest = creep.harvest(source);
-    if (source && harvest === ERR_NOT_IN_RANGE) {
-        creep.moveTo(source, MINE_PATH);
+    if (source && creep.harvest(source) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(source.pos, MINE_PATH);
     }
     //the extractor requires explicit position declaration.
     else {
-        if (source.id === "65bf91ec812dc9d43d765b57") {
-            creep.moveTo(source.pos, MINE_PATH);
-            let mineral = Game.getObjectById('5bbcb10040062e4259e929dc')
-            // The deposit is ready for harvesting again
-          harvest=creep.harvest(mineral);
-        }
-        // console.log(source.ticksToRegeneration === 0)
-        // console.log(source.id)
+        creep.moveTo(source, MINE_PATH);
+        creep.harvest(source);
     }
-    return harvest;
 }
 
 function HarvestFromExtractors(creep) {
@@ -225,7 +219,7 @@ function Reinforce(creep) {
 function Repair(creep) {
     //Get repair Creeps and the structure IDs from room memory
     let repairers = getCreepsByRole(creep, 'repairer')
-    let structuresID = ROOM.memory.damagedStructures;
+    let structuresID = Memory.rooms[creep.room.name].damagedStructures;
 
     //If there are creeps available, cycle through the IDs and give each repairer an object to repair.
     if (repairers.length > 0) {
@@ -234,15 +228,16 @@ function Repair(creep) {
 
             //Either Repair or Remove from Memory
             if (structure) {
-                if (repairers[r].repair(structure) === ERR_NOT_IN_RANGE)
+                if (repairers[r].repair(structure) === ERR_NOT_IN_RANGE){
                     repairers[r].moveTo(structure, REPAIR_PATH);
+                }
             } else {
-                ROOM.memory.damagedStructures = _.without(ROOM.memory.damagedStructures, structuresID[r]);
+                Memory.rooms[creep.room.name].damagedStructures = _.without(Memory.rooms[creep.room.name].damagedStructures, structuresID[r]);
             }
 
             // If Repaired, Remove the structure from the list
             if (structure.hits === structure.hitsMax) {
-                ROOM.memory.damagedStructures = _.without(ROOM.memory.damagedStructures, structure.id);
+                Memory.rooms[creep.room.name].damagedStructures = _.without(Memory.rooms[creep.room.name].damagedStructures, structure.id);
             }
         }
     } else {

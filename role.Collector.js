@@ -5,9 +5,9 @@ let roleCollector = {
         setCollectingParameter(creep)
         if (creep.memory.collecting) {
             creep.say('🔄 Collecting');
-            // ConductCollection(creep);
+            ConductCollection(creep);
             // Haul(creep);
-            WithdrawEnergy(creep, Game.getObjectById('65c004cdfc811b3e490a8a12'));
+            // WithdrawEnergy(creep, Game.getObjectById('65c004cdfc811b3e490a8a12'));
         } else {
             creep.say('🔄 Deploy');
             if (creep.store[RESOURCE_ENERGY] > 0) {

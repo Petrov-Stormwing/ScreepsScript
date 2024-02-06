@@ -4,6 +4,7 @@ let roleClaimer = {
 
     /** @param {Creep} creep **/
     run: function (creep) {
+        creep.memory.targetRoom='W59S5';
         if (creep.room.name !== creep.memory.targetRoom) {
             creep.moveTo(new RoomPosition(28, 14, creep.memory.targetRoom), {visualizePathStyle: {stroke: '#ffaa00'}});
         } else {

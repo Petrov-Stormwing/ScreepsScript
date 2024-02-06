@@ -12,47 +12,112 @@ let roleTombraider = require('role.Tombraider');
 let roleRanger = require('role.Ranger');
 
 global.ROOM = Game.rooms['W59S4'];
-global.SPAWN = 'Xel\'Invictus';
 global.NORTH_ENERGY_CONTAINER = '65b7e25609c2d1cf9e20b559';
 global.SOUTH_ENERGY_CONTAINER = '65b7e57973f23d398567fbc3';
 global.ZYNTHIUM_CONTAINER = '65c004cdfc811b3e490a8a12';
 global.CONTROLLER_ENERGY_CONTAINER_I = '65b7fc77ba73c30e2e6a9e67';
 global.CONTROLLER_ENERGY_CONTAINER_II = '65b8f767d93405714cd188e2';
 
-const CREEP_COUNTER = {
-    'Harvesters': 2,
-    'Upgrader': 2,
-    'Builders': 2,
-    'Repairers': 3,
-    'Haulers': 4,
-    'Collector': 1,
-    'Supplier': 0,
-    'Claimer': 0,
-    'Defender': 1,
-    'Ranger': 1,
-    'Tombraider': 1,
+const roomData = {
+    'W59S4': {
+        'spawner': 'Xel\'Invictus',
+        'creepCounts': {
+            'harvester': 2,
+            'builder': 2,
+            'upgrader': 2,
+            'repairer': 3,
+            'hauler': 4,
+            'collector': 1,
+            'tombraider': 1,
+            'defender': 1,
+            'ranger': 1,
+            'claimer': 0,
+            'supplier': 0,
+            // Add more roles and counts as needed for Room1
+        }
+    },
+    // 'Room2': {
+    //     'spawner': 'Spawn2',
+    //     'creepCounts': {
+    //         'harvester': 4,
+    //         'upgrader': 2,
+    //         // Add more roles and counts as needed for Room2
+    //     }
+    // }
+    // Add more rooms as needed
 };
 
-module.exports.loop = function () {
-    const utils = require('Utils');
-    const ResourcesUtility = require('ResourcesUtility');
-
-    // if (Game.rooms['W59S4'].find(FIND_HOSTILE_CREEPS).length === 0) {
-    BuildHarvesters();
-    BuildUpgraders();
-    BuildBuilders();
-    BuildRepairers();
-    BuildHauler();
-    BuildCollectors();
-    BuildSuppliers();
-    BuildClaimer();
-    BuildDefender()
-    BuildRanger()
-    BuildTombraider();
-    CreepDrivers()
-    // }
+const BodyPartsRenderer = {
+    'harvester': [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE],
+    'builder': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+    'upgrader': [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE],
+    'repairer': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+    'hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+    'collector': [CARRY, CARRY, MOVE, MOVE],
+    'tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+    'defender': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK],
+    'ranger': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK],
+    'supplier': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+    'claimer': [CLAIM, MOVE, MOVE],
 }
 
+/**
+ * Entry point to All Scripts
+ */
+module.exports.loop = function () {
+    //Creeps and Roles Initializer
+    for (let roomName in roomData) {
+        BuildCreepsForRoom(roomName);
+    }
+    CreepDrivers()
+}
+
+/**
+ * Universal Creep Builder
+ * @param role
+ * @param bodyParts
+ * @param roleName
+ * @param creepCounter
+ * @param spawner
+ */
+function BuildCreep(role, bodyParts, roleName, creepCounter, spawner) {
+    let creepsOfType = _.filter(Game.creeps, (creep) => creep.memory.role === role);
+
+    if (creepsOfType.length < creepCounter) {
+        let newName = roleName + Game.time;
+        console.log(`Spawning new ${roleName} in ${spawner}: ${newName}`);
+        Game.spawns[spawner].spawnCreep(bodyParts, newName, {memory: {role: role}});
+    }
+}
+
+/**
+ * Room-Based Initializer of BuildCreep
+ * @param roomName
+ */
+function BuildCreepsForRoom(roomName) {
+    const room = roomData[roomName];
+    const spawner = room.spawner;
+
+    for (let role in room.creepCounts) {
+        const bodyParts = BodyPartsRenderer[role];
+        const creepCounter = room.creepCounts[role];
+        BuildCreep(role, bodyParts, role.charAt(0).toUpperCase() + role.slice(1), creepCounter, spawner);
+    }
+
+    //Say what you build, Spawner
+    if (Game.spawns[spawner].spawning) {
+        let spawningCreep = Game.creeps[Game.spawns[spawner].spawning.name];
+        Game.spawns[spawner].room.visual.text(
+            '🛠️' + spawningCreep.memory.role,
+            Game.spawns[spawner].pos.x + 1,
+            Game.spawns[spawner].pos.y,
+            {align: 'left', opacity: 0.8});
+    }
+}
+
+/**
+ * Initializes the roles of each creep post creation
+ */
 function CreepDrivers() {
     //Clean Memory from Dead Creeps
     for (let name in Memory.creeps) {
@@ -62,184 +127,67 @@ function CreepDrivers() {
         }
     }
 
-    //Set list of Damage buildings
+    //Set list of Damage buildings and print their numbers
     DamagedStructures();
     console.log(`Structures to Repair: ${ROOM.memory.damagedStructures.length}`)
 
-    //Say what you build, Spawner
-    if (Game.spawns[SPAWN].spawning) {
-        let spawningCreep = Game.creeps[Game.spawns[SPAWN].spawning.name];
-        Game.spawns[SPAWN].room.visual.text(
-            '🛠️' + spawningCreep.memory.role,
-            Game.spawns[SPAWN].pos.x + 1,
-            Game.spawns[SPAWN].pos.y,
-            {align: 'left', opacity: 0.8});
-    }
+    // Define a mapping of roles to role functions
+    const roleFunctions = {
+        'harvester': roleHarvester,
+        'upgrader': roleUpgrader,
+        'builder': roleBuilder,
+        'hauler': roleHauler,
+        'repairer': roleRepairer,
+        'collector': roleCollector,
+        'supplier': roleSupplier,
+        'claimer': roleClaimer,
+        'defender': roleDefender,
+        'tombraider': roleTombraider,
+        'ranger': roleRanger
+    };
 
-    //Initialize the Role of each Creep
+    // Initialize the Role of each Creep
     for (let name in Game.creeps) {
         let creep = Game.creeps[name];
-        if (creep.memory.role === 'harvester') {
-            roleHarvester.run(creep);
-        }
-        if (creep.memory.role === 'upgrader') {
-            roleUpgrader.run(creep);
-        }
-        if (creep.memory.role === 'builder') {
-            roleBuilder.run(creep);
-        }
-        if (creep.memory.role === 'hauler') {
-            roleHauler.run(creep);
-        }
-        if (creep.memory.role === 'repairer') {
-            roleRepairer.run(creep);
-        }
-        if (creep.memory.role === 'collector') {
-            roleCollector.run(creep);
-        }
-        if (creep.memory.role === 'supplier') {
-            roleSupplier.run(creep);
-        }
-        if (creep.memory.role === 'claimer') {
-            roleClaimer.run(creep);
-        }
-        if (creep.memory.role === 'defender') {
-            roleDefender.run(creep);
-        }
-        if (creep.memory.role === 'tombraider') {
-            roleTombraider.run(creep);
-        }
-        if (creep.memory.role === 'ranger') {
-            roleRanger.run(creep);
+        let roleFunction = roleFunctions[creep.memory.role];
+        if (roleFunction) {
+            roleFunction.run(creep);
         }
     }
 }
 
-//Build the Required Count of Harvesters
-function BuildHarvesters() {
-    let harvesters = _.filter(Game.creeps, (creep) => creep.memory.role === 'harvester');
+/**
+ * Check Room memory for Damaged structures. If non, find all, order them by hit points lost and set in memory.
+ */
+function DamagedStructures() {
+    for (let roomName in Game.rooms) {
+        if (!Memory.rooms[roomName]) {
+            Memory.rooms[roomName] = {}; // Initialize Memory object for the room if it's undefined
+        }
 
-    if (harvesters.length < CREEP_COUNTER['Harvesters']) {
-        let newName = 'Harvester' + Game.time;
-        console.log('Spawning new harvester: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE], newName,
-            {memory: {role: 'harvester'}});
+        if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length <= 3) {
+            let room = Game.rooms[roomName];
+            let damagedStructures = room.find(FIND_STRUCTURES, {
+                filter: structure => {
+                    return structure.hits < structure.hitsMax
+                        && structure.hits < 250000
+                        && structure.structureType !== STRUCTURE_WALL
+                        && structure.structureType !== STRUCTURE_RAMPART;
+                }
+            });
+
+            // Order the damaged structures by their hits difference
+            damagedStructures.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
+
+            // Store the list of damaged structure IDs in Memory
+            Memory.rooms[roomName].damagedStructures = _.map(damagedStructures, 'id');
+        }
     }
 }
 
-//Build the Required Count of Upgraders
-function BuildUpgraders() {
-    let upgraders = _.filter(Game.creeps, (creep) => creep.memory.role === 'upgrader');
-
-    if (upgraders.length < CREEP_COUNTER['Upgrader']) {
-        let newName = 'Upgrader' + Game.time;
-        console.log('Spawning new upgrader: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE], newName,
-            {memory: {role: 'upgrader'}});
-    }
-}
-
-//Build the Required Count of Builders
-function BuildBuilders() {
-    let builders = _.filter(Game.creeps, (creep) => creep.memory.role === 'builder');
-
-    if (builders.length < CREEP_COUNTER['Builders']) {
-        let newName = 'Builder' + Game.time;
-        console.log('Spawning new builder: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], newName,
-            {memory: {role: 'builder'}});
-    }
-}
-
-function BuildRepairers() {
-    let repairers = _.filter(Game.creeps, (creep) => creep.memory.role === 'repairer');
-
-    if (repairers.length < CREEP_COUNTER['Repairers']) {
-        let newName = 'Repairer' + Game.time;
-        console.log('Spawning new repairer: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE], newName,
-            {memory: {role: 'repairer'}});
-    }
-}
-
-function BuildHauler() {
-    let haulers = _.filter(Game.creeps, (creep) => creep.memory.role === 'hauler');
-
-    if (haulers.length < CREEP_COUNTER['Haulers']) {
-        let newName = 'Hauler' + Game.time;
-        console.log('Spawning new hauler: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], newName,
-            {memory: {role: 'hauler'}});
-    }
-}
-
-function BuildCollectors() {
-    let collectors = _.filter(Game.creeps, (creep) => creep.memory.role === 'collector');
-
-    if (collectors.length < CREEP_COUNTER['Collector']) {
-        let newName = 'Collector' + Game.time;
-        console.log('Spawning new collector: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, MOVE, MOVE], newName,
-            {memory: {role: 'collector'}});
-    }
-}
-
-function BuildSuppliers() {
-    let suppliers = _.filter(Game.creeps, (creep) => creep.memory.role === 'supplier');
-
-    if (suppliers.length < CREEP_COUNTER['Supplier']) {
-        let newName = 'Supplier' + Game.time;
-        console.log('Spawning new supplier: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], newName,
-            {memory: {role: 'supplier'}});
-    }
-}
-
-function BuildClaimer() {
-    let claimers = _.filter(Game.creeps, (creep) => creep.memory.role === 'claimer');
-
-    if (claimers.length < CREEP_COUNTER['Claimer']) {
-        let newName = 'Claimer' + Game.time;
-        console.log('Spawning new claimer: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([CLAIM, MOVE, MOVE], newName,
-            {memory: {role: 'claimer', targetRoom: 'W59S5'}});
-    }
-}
-
-function BuildDefender() {
-    let defenders = _.filter(Game.creeps, (creep) => creep.memory.role === 'defender');
-
-    if (defenders.length < CREEP_COUNTER['Defender']) {
-        let newName = 'Defender' + Game.time;
-        console.log('Spawning new defender: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK], newName,
-            {memory: {role: 'defender'}});
-    }
-}
-
-function BuildRanger() {
-    let rangers = _.filter(Game.creeps, (creep) => creep.memory.role === 'ranger');
-
-    if (rangers.length < CREEP_COUNTER['Ranger']) {
-        let newName = 'Ranger' + Game.time;
-        console.log('Spawning new ranger: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK], newName,
-            {memory: {role: 'ranger'}});
-    }
-}
-
-function BuildTombraider() {
-    let tombraiders = _.filter(Game.creeps, (creep) => creep.memory.role === 'tombraider');
-
-    if (tombraiders.length < CREEP_COUNTER['Tombraider']) {
-        let newName = 'Tombraider' + Game.time;
-        console.log('Spawning new tombraider: ' + newName);
-        Game.spawns[SPAWN].spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], newName,
-            {memory: {role: 'tombraider'}});
-    }
-}
-
-//Get Count of all creepers through the Console
+/**
+ * Get Count of all creepers through the Console
+ */
 global.GroupCreepsByRole = function () {
     // Initialize an object to store the count of creeps for each role
     let creepCountByRole = {};
@@ -258,27 +206,5 @@ global.GroupCreepsByRole = function () {
     // Print the count for each role
     for (let role in creepCountByRole) {
         console.log(`${role}: ${creepCountByRole[role]}`);
-    }
-}
-
-/**
- * // Check Room memory for Damaged structures. If non, find all, order them by hit points lost and set in memory.
- */
-function DamagedStructures() {
-    if (!ROOM.memory.damagedStructures || ROOM.memory.damagedStructures.length <= 3) {
-        let damagedStructures = ROOM.find(FIND_STRUCTURES, {
-            filter: structure => {
-                return structure.hits < structure.hitsMax
-                    && structure.hits < 250000
-                    && structure.structureType !== STRUCTURE_WALL
-                    && structure.structureType !== STRUCTURE_RAMPART;
-            }
-        });
-
-        // Order the damaged structures by their hits difference
-        damagedStructures.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
-
-        // Store the list in memory
-        ROOM.memory.damagedStructures = _.map(damagedStructures, 'id');
     }
 }
