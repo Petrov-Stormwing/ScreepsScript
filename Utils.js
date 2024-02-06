@@ -96,75 +96,29 @@ function getCreepsByRole(creep, role) {
         creep => creep.memory.role === role);
 }
 
-function getSource(creep) {
-    let sourceIDs = [];
-
-    // Get Energy Sources
-    let sources = creep.room.find(FIND_SOURCES);
-    sourceIDs = sources.map(source => source.id);
-
-    // Get Mineral Sources
-    let extractors = creep.room.find(FIND_STRUCTURES, {
-        filter: structure => structure.structureType === STRUCTURE_EXTRACTOR
-    });
-    if (extractors.length) {
-        sourceIDs.push(extractors[0].id);
-    }
-
-    return sourceIDs;
-}
-
-
 /**
  * Balanced and Optimized function to Mine from Energy Source
+ * Mineral sources with Extractor if resource is available can be harvested too.
  * @param creep
  */
 function Mine(creep) {
-    creep.memory.sourceId = 0;
-    // Check if the creep already has a source assigned
+    // Check if the creep already has a source assigned. If not - Assign one
     if (!creep.memory.sourceId) {
-        // If not, find the sources in the room
-        let sources = creep.room.find(FIND_SOURCES);
-        // Find all extractors in the current room
-        let extractors = creep.room.find(FIND_MINERALS);
-        sources.push(extractors[0]);
-
-        // Find the least assigned source among all creeps
-        let leastAssignedSource = _.min(sources, source => _.filter(Game.creeps, c => c.memory.sourceId === source.id).length);
-
-        // Assign the least assigned source to the creep
-        creep.memory.sourceId = leastAssignedSource.id;
+        let sources = Object.values(Memory.rooms[creep.room.name].sourceIDs)
+        // Find the least assigned source in the room with no Creep on it and Assign the least assigned source to the creep
+        creep.memory.sourceId = _.min(sources, sourceId => {
+            return _.filter(Game.creeps, c => c.memory.role === 'harvester' && c.memory.sourceId === sourceId).length;
+        });
     }
 
-    // Get the assigned source based on the memory
+    // Get the assigned source based on the creep.memory and move the creep to it.
     let source = Game.getObjectById(creep.memory.sourceId);
     let harvest = creep.harvest(source);
-    if (source && creep.harvest(source) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(source.pos, MINE_PATH);
-    }
-    //the extractor requires explicit position declaration.
-    else {
+    if (harvest === ERR_NOT_IN_RANGE) {
         creep.moveTo(source, MINE_PATH);
-        creep.harvest(source);
-    }
-}
-
-function HarvestFromExtractors(creep) {
-    // Find all extractors in the current room
-    let extractors = creep.room.find(FIND_STRUCTURES, {
-        filter: structure => structure.structureType === STRUCTURE_EXTRACTOR
-    });
-
-    if (extractors.length > 0) {
-        // Check if the creep is at the extractor, if not, move to it
-        if (!creep.pos.isNearTo(extractors[0])) {
-            creep.moveTo(extractors[0], {visualizePathStyle: {stroke: '#ffaa00'}});
-        } else {
-            // Harvest from the extractor
-            creep.harvest(extractors[0]);
-        }
+        return 1;
     } else {
-        console.log("No extractors found in the room.");
+        return 0;
     }
 }
 
@@ -228,7 +182,7 @@ function Repair(creep) {
 
             //Either Repair or Remove from Memory
             if (structure) {
-                if (repairers[r].repair(structure) === ERR_NOT_IN_RANGE){
+                if (repairers[r].repair(structure) === ERR_NOT_IN_RANGE) {
                     repairers[r].moveTo(structure, REPAIR_PATH);
                 }
             } else {

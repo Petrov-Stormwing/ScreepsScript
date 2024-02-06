@@ -22,10 +22,10 @@ const roomData = {
     'W59S4': {
         'spawner': 'Xel\'Invictus',
         'creepCounts': {
-            'harvester': 2,
+            'harvester': Memory.rooms['W59S4'].sourceIDs.length,
+            'repairer': Math.min(1,Memory.rooms['W59S4'].damagedStructures.length/25,),
+            'upgrader': Math.min(1,Game.rooms['W59S4'].storage[RESOURCE_ENERGY]/100000),
             'builder': 2,
-            'upgrader': 2,
-            'repairer': 3,
             'hauler': 4,
             'collector': 1,
             'tombraider': 1,
@@ -33,15 +33,16 @@ const roomData = {
             'ranger': 1,
             'claimer': 0,
             'supplier': 0,
-            // Add more roles and counts as needed for Room1
+            // Add more roles and counts as needed for the Room
         }
     },
-    // 'Room2': {
-    //     'spawner': 'Spawn2',
+    // 'W59S5': {
+    //     'spawner': 'Xel\'Terminus',
     //     'creepCounts': {
-    //         'harvester': 4,
+    //         'harvester': 1,
     //         'upgrader': 2,
-    //         // Add more roles and counts as needed for Room2
+    //         'builder': 2,
+    //         // Add more roles and counts as needed for the Room
     //     }
     // }
     // Add more rooms as needed
@@ -49,9 +50,9 @@ const roomData = {
 
 const BodyPartsRenderer = {
     'harvester': [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE],
-    'builder': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
-    'upgrader': [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE],
     'repairer': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+    'upgrader': [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE],
+    'builder': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
     'hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
     'collector': [CARRY, CARRY, MOVE, MOVE],
     'tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
@@ -127,9 +128,9 @@ function CreepDrivers() {
         }
     }
 
-    //Set list of Damage buildings and print their numbers
-    DamagedStructures();
-    console.log(`Structures to Repair: ${ROOM.memory.damagedStructures.length}`)
+    //Define Memory Data
+    getDamagedStructures();
+    getSources()
 
     // Define a mapping of roles to role functions
     const roleFunctions = {
@@ -159,12 +160,8 @@ function CreepDrivers() {
 /**
  * Check Room memory for Damaged structures. If non, find all, order them by hit points lost and set in memory.
  */
-function DamagedStructures() {
+function getDamagedStructures() {
     for (let roomName in Game.rooms) {
-        if (!Memory.rooms[roomName]) {
-            Memory.rooms[roomName] = {}; // Initialize Memory object for the room if it's undefined
-        }
-
         if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length <= 3) {
             let room = Game.rooms[roomName];
             let damagedStructures = room.find(FIND_STRUCTURES, {
@@ -182,6 +179,30 @@ function DamagedStructures() {
             // Store the list of damaged structure IDs in Memory
             Memory.rooms[roomName].damagedStructures = _.map(damagedStructures, 'id');
         }
+        console.log(`Structures to Repair [${roomName}]: ${Memory.rooms[roomName].damagedStructures.length}`)
+    }
+}
+
+function getSources() {
+    for (let roomName in Game.rooms) {
+        //Get the Room Object from the name.
+        let room = Game.rooms[roomName];
+
+        //Through the Room Object find the sources needed.
+        let sources = room.find(FIND_SOURCES);
+        let mineral = room.find(FIND_MINERALS, {
+            filter: mineral => {
+                let extractor = mineral.pos.lookFor(LOOK_STRUCTURES).find(structure => structure.structureType === STRUCTURE_EXTRACTOR);
+                return extractor && mineral.ticksToRegeneration === undefined; // Exclude respawning minerals
+            }
+        })[0];
+
+        // Concatenate sources and mineral into one array
+        let allSources = [...sources, mineral].filter(Boolean); // Filter out any undefined values
+
+        // Map the IDs of all sources to Memory and print to Console
+        Memory.rooms[roomName].sourceIDs = allSources.map(source => source.id);
+        console.log(`Sources Count [${roomName}]: ${Memory.rooms[roomName].sourceIDs.length}`)
     }
 }
 
