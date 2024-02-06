@@ -137,20 +137,22 @@ function Mine(creep) {
 
     // Get the assigned source based on the memory
     let source = Game.getObjectById(creep.memory.sourceId);
-    if (source && creep.harvest(source) === ERR_NOT_IN_RANGE) {
+    let harvest = creep.harvest(source);
+    if (source && harvest === ERR_NOT_IN_RANGE) {
         creep.moveTo(source, MINE_PATH);
     }
     //the extractor requires explicit position declaration.
-    else{
-        if (source.id==="65bf91ec812dc9d43d765b57"){
+    else {
+        if (source.id === "65bf91ec812dc9d43d765b57") {
             creep.moveTo(source.pos, MINE_PATH);
-            let mineral=Game.getObjectById('5bbcb10040062e4259e929dc')
+            let mineral = Game.getObjectById('5bbcb10040062e4259e929dc')
             // The deposit is ready for harvesting again
-            creep.harvest(mineral);
+          harvest=creep.harvest(mineral);
         }
         // console.log(source.ticksToRegeneration === 0)
         // console.log(source.id)
     }
+    return harvest;
 }
 
 function HarvestFromExtractors(creep) {
@@ -283,19 +285,24 @@ function Defend(creep, hostiles) {
     let defenders = Object.values(Game.creeps).filter(creep => creep.memory.role === 'defender');
     let rangers = Object.values(Game.creeps).filter(creep => creep.memory.role === 'ranger');
     for (let d = 0; d < defenders.length; d++) {
-        if (defenders[d].pos !== RAMPART[d]) {
+        if (defenders[d].pos !== RAMPART[d] && defenders[d].memory.role === 'defender') {
             defenders[d].moveTo(RAMPART[d], DEFENCE_PATH)
+            // Find hostile creeps in Melee range
+            let hostileCreepsInMelee = defenders[d].pos.findInRange(FIND_HOSTILE_CREEPS, 1); // Adjust the range as needed
+            if (hostiles.length > 0 && defenders[d].memory.role === 'defender') {
+                // Attack the closest hostile creep
+                let targetCreep = defenders[d].pos.findClosestByRange(hostileCreepsInMelee);
+                defenders[d].attack(targetCreep);
+            }
+        }
+        if (rangers[d].pos !== RAMPART[d]) {
             rangers[d].moveTo(new RoomPosition(RAMPART[d].x + 1, RAMPART[d].y + 1, Game.rooms['W59S4'].name), DEFENCE_PATH)
-            // Find hostile creeps in range
-            let hostileCreepsInRange = defenders[d].pos.findInRange(FIND_HOSTILE_CREEPS, 3); // Adjust the range as needed
-
-            if (hostiles.length > 0 && creep.memory.role === 'ranger') {
+            // Find hostile creeps in Ranged range
+            let hostileCreepsInRange = rangers[d].pos.findInRange(FIND_HOSTILE_CREEPS, 3); // Adjust the range as needed
+            if (hostiles.length > 0 && rangers[d].memory.role === 'ranger') {
                 // Range Attack the closest hostile creep
-                let targetCreep = creep.pos.findClosestByRange(hostileCreepsInRange);
-                creep.rangedAttack(targetCreep);
-            } else {
-                let targetCreep = creep.pos.findClosestByRange(hostileCreepsInRange);
-                creep.attack(targetCreep);
+                let targetCreep = rangers[d].pos.findClosestByRange(hostileCreepsInRange);
+                rangers[d].rangedAttack(targetCreep);
             }
         }
     }
@@ -354,10 +361,12 @@ function Haul(creep) {
     let sources = [
         Game.getObjectById(NORTH_ENERGY_CONTAINER),
         Game.getObjectById(SOUTH_ENERGY_CONTAINER),
+        // Game.getObjectById(ZYNTHIUM_CONTAINER),
     ];
-    sources.sort((a, b) => b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY]);
+    sources.sort((a, b) => b.store.getUsedCapacity() - a.store.getUsedCapacity());
 
     WithdrawEnergy(creep, sources[0]);
+    WithdrawAlloys(creep, sources[0]);
 }
 
 /**

@@ -1,6 +1,6 @@
 let roleUpgrader = {
     run: function (creep) {
-        if(creep.store[RESOURCE_ENERGY]>0){
+        if(creep.store.getUsedCapacity()>0){
             Upgrade(creep);
         } else{
             WithdrawEnergy(creep, ROOM.storage);

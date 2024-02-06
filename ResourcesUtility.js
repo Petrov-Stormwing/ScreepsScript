@@ -59,7 +59,8 @@ function TransferEnergy(receiver, provider) {
 }
 
 /**
- * //General Storage Function. Prioritizes Spawn and Extensions, followed by Containers and Storage.
+ * General Storage Function. Prioritizes Spawn and Extensions, followed by Storage.
+ * It is Modified to Work with Minerals as well.
  * @param creep
  */
 function StoreEnergy(creep) {

@@ -15,13 +15,14 @@ global.ROOM = Game.rooms['W59S4'];
 global.SPAWN = 'Xel\'Invictus';
 global.NORTH_ENERGY_CONTAINER = '65b7e25609c2d1cf9e20b559';
 global.SOUTH_ENERGY_CONTAINER = '65b7e57973f23d398567fbc3';
+global.ZYNTHIUM_CONTAINER = '65c004cdfc811b3e490a8a12';
 global.CONTROLLER_ENERGY_CONTAINER_I = '65b7fc77ba73c30e2e6a9e67';
 global.CONTROLLER_ENERGY_CONTAINER_II = '65b8f767d93405714cd188e2';
 
 const CREEP_COUNTER = {
-    'Harvesters': 3,
-    'Upgrader': 1,
-    'Builders': 1,
+    'Harvesters': 2,
+    'Upgrader': 2,
+    'Builders': 2,
     'Repairers': 3,
     'Haulers': 4,
     'Collector': 1,

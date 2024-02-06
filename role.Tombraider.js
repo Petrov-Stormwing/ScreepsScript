@@ -8,6 +8,8 @@ const roleTombraider = {
         if (creep.memory.looting) {
             creep.say('🚧 Loot');
             Tombraiding(creep);
+            // Haul(creep);
+            // WithdrawEnergy(creep, ROOM.storage);
         } else {
             creep.say('🔄 Deploy');
             if (creep.store[RESOURCE_ENERGY] > 0) {
