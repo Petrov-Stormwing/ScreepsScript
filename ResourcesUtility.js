@@ -1,6 +1,5 @@
 require('Utils');
-const _ = require('lodash');
-
+require('lodash');
 global.RechargeCreep = RechargeCreep;
 global.WithdrawEnergy = WithdrawEnergy;
 global.TransferEnergy = TransferEnergy;

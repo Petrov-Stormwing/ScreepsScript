@@ -1,3 +1,5 @@
+// noinspection JSCheckFunctionSignatures,JSUnresolvedReference
+
 const _ = require("lodash");
 
 //Global Functions and Constants
@@ -158,7 +160,6 @@ function Reinforce(creep) {
                 && structure.hits < REINFORCE_LEVEL
         }
     });
-    let builders = getCreepsByRole(creep, 'builders')
     for (let structure of defences) {
         if (creep.repair(structure) === ERR_NOT_IN_RANGE) {
             creep.moveTo(structure, REINFORCE_PATH);
@@ -201,14 +202,30 @@ function Repair(creep) {
 
 /**
  * Build Function - finds any sites and moves the creep there and performs the build operation.
+ * Inter-Room now available
  * @param creep
- * @param targets
  */
-function Build(creep, targets) {
-    if (targets.length > 0) {
-        if (creep.build(targets[0]) === ERR_NOT_IN_RANGE) {
-            creep.moveTo(targets[0], BUILD_PATH);
+function Build(creep) {
+    let NoSites=[];
+    for (let roomName in Game.rooms) {
+        if (Memory.rooms[roomName].constructionSites.length) {
+            if (creep.room.name !== roomName) {
+                let exitDir = Game.map.findExit(creep.room, roomName);
+                let exit = creep.pos.findClosestByRange(exitDir);
+                creep.moveTo(exit, BUILD_PATH);
+            }
+            let site = Game.getObjectById(Memory.rooms[roomName].constructionSites[0]);
+            if (creep.build(site) === ERR_NOT_IN_RANGE) {
+                creep.moveTo(site, BUILD_PATH);
+            }
+            break;
+        }else{
+            NoSites.push(roomName);
         }
+    }
+    if(NoSites.length===Object.keys(Game.rooms).length){
+        console.log("There are no Sites to build")
+        Reinforce(creep);
     }
 }
 

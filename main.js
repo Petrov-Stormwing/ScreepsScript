@@ -24,8 +24,8 @@ const roomData = {
         'creepCounts': {
             'harvester': Memory.rooms['W59S4'].sourceIDs.length,
             'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 25),
-            'upgrader': Math.max(1, Game.rooms['W59S4'].storage[RESOURCE_ENERGY] / 100000),
-            'builder': 1,
+            'upgrader': Math.max(1, Game.rooms['W59S4'].storage.store[RESOURCE_ENERGY] / 100000),
+            'builder': 2,
             'hauler': 2,
             'collector': 1,
             'tombraider': 1,
@@ -130,6 +130,7 @@ function CreepDrivers() {
 
     //Define Memory Data
     getDamagedStructures();
+    getConstructionSites();
     getSources();
     getLinkTransfer();
 
@@ -225,13 +226,27 @@ function getLinkTransfer() {
         let closestLinkToStorage = room.storage.pos.findClosestByRange(links);
         links = _.without(links, closestLinkToStorage);
         for (let link of links) {
-            if (closestLinkToStorage.energy === 0 && link.energy >= 750) {
+            if (closestLinkToStorage.energy === 0 && link.energy >= 800) {
                 room.visual.line(link.pos.x, link.pos.y, closestLinkToStorage.pos.x, closestLinkToStorage.pos.y, {
                     color: 'white',
                     lineStyle: 'dashed'
                 });
                 link.transferEnergy(closestLinkToStorage);
             }
+        }
+    }
+}
+
+/**
+ * Finds and puts in memory all Construction sites in the rooms I own.
+ */
+function getConstructionSites() {
+    for (let roomName in Game.rooms) {
+        let room = Game.rooms[roomName];
+        let sites = room.find(FIND_CONSTRUCTION_SITES);
+        if (sites) {
+            Memory.rooms[roomName].constructionSites = sites.map(site => site.id);
+            console.log(`Construction Sites for Room ${roomName}: ${Memory.rooms[roomName].constructionSites.length}`)
         }
     }
 }
