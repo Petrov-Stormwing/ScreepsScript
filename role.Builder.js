@@ -6,10 +6,19 @@ let roleBuilder = {
     /** @param {Creep} creep **/
     run: function (creep) {
         setBuildingParameter(creep)
+        let storage = Game.rooms['W59S4'].storage;
+
         if (creep.memory.building) {
-            Build(creep);
+            for (let roomName in Game.rooms) {
+                if (Memory.rooms[roomName].constructionSites.length > 0) {
+                    Build(creep, roomName);
+                }
+                else{
+                    Reinforce(creep);
+                }
+            }
         } else {
-            WithdrawEnergy(creep, Game.getObjectById('65c244a8e30733dc4b44cbbd'));
+            WithdrawEnergy(creep, storage);
         }
     }
 };

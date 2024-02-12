@@ -23,6 +23,7 @@ global.ConductCollection = ConductCollection;
 global.Haul = Haul;
 global.ReserveController = ReserveController;
 global.ClaimController = ClaimController;
+global.extendCreepLifespan = extendCreepLifespan;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
@@ -92,10 +93,16 @@ function getNearestExtension(creep) {
     }
 }
 
-//Get creeps by role without repeating the code for that in various occasions.
-function getCreepsByRole(creep, role) {
-    return Object.values(Game.creeps).filter(
-        creep => creep.memory.role === role);
+/**
+ * Get creeps by role, providing the room name for inter-room functionality
+ * @param role
+ * @param roomName
+ * @returns {*}
+ */
+function getCreepsByRole(role, roomName) {
+    return Game.rooms[roomName].find(FIND_MY_CREEPS, {
+        filter: creep => creep.memory.role === role
+    });
 }
 
 /**
@@ -170,33 +177,31 @@ function Reinforce(creep) {
 /**
  * Commences repair based on Room.memory.damagedStructures list. Upon depletion of the list it is automatically renews from main.js
  * @param creep
+ * @param roomName
  */
-function Repair(creep) {
+function Repair(creep, roomName) {
     //Get repair Creeps and the structure IDs from room memory
-    let repairers = getCreepsByRole(creep, 'repairer')
-    let structuresID = Memory.rooms[creep.room.name].damagedStructures;
+    let structuresID = Memory.rooms[roomName].damagedStructures;
 
-    //If there are creeps available, cycle through the IDs and give each repairer an object to repair.
-    if (repairers.length > 0) {
-        for (let r = 0; r < _.min([repairers.length, structuresID.length]); r++) {
-            let structure = Game.getObjectById(structuresID[r]);
-
-            //Either Repair or Remove from Memory
-            if (structure) {
-                if (repairers[r].repair(structure) === ERR_NOT_IN_RANGE) {
-                    repairers[r].moveTo(structure, REPAIR_PATH);
-                }
-            } else {
-                Memory.rooms[creep.room.name].damagedStructures = _.without(Memory.rooms[creep.room.name].damagedStructures, structuresID[r]);
-            }
-
-            // If Repaired, Remove the structure from the list
-            if (structure.hits === structure.hitsMax) {
-                Memory.rooms[creep.room.name].damagedStructures = _.without(Memory.rooms[creep.room.name].damagedStructures, structure.id);
-            }
+    if (creep.memory.repairID === '') {
+        if (structuresID[0]) {
+            creep.memory.repairID = structuresID[0];
+            Memory.rooms[roomName].damagedStructures = _.without(Memory.rooms[roomName].damagedStructures, structuresID[0]);
         }
     } else {
-        console.log("No CREEPS found to conduct Repairs");
+        let structure = Game.getObjectById(creep.memory.repairID)
+        if (structure) {
+            let repair = creep.repair(structure)
+            if (repair === ERR_NOT_IN_RANGE) {
+                creep.moveTo(structure, REPAIR_PATH);
+            }
+            // If Repaired, Remove the structure from the list
+            if (structure.hits === structure.hitsMax) {
+                creep.memory.repairID = '';
+            }
+        } else {
+            creep.memory.repairID = '';
+        }
     }
 }
 
@@ -204,28 +209,27 @@ function Repair(creep) {
  * Build Function - finds any sites and moves the creep there and performs the build operation.
  * Inter-Room now available
  * @param creep
+ * @param roomName
  */
-function Build(creep) {
-    let NoSites=[];
-    for (let roomName in Game.rooms) {
-        if (Memory.rooms[roomName].constructionSites.length) {
-            if (creep.room.name !== roomName) {
-                let exitDir = Game.map.findExit(creep.room, roomName);
-                let exit = creep.pos.findClosestByRange(exitDir);
-                creep.moveTo(exit, BUILD_PATH);
-            }
-            let site = Game.getObjectById(Memory.rooms[roomName].constructionSites[0]);
-            if (creep.build(site) === ERR_NOT_IN_RANGE) {
+function Build(creep, roomName) {
+    //Get builder Creeps and the construction site IDs from room memory
+    let siteIDs = Memory.rooms[roomName].constructionSites;
+
+    if (!creep.memory.siteID || creep.memory.siteID === '') {
+        if (siteIDs[0]) {
+            creep.memory.siteID = siteIDs[0];
+            Memory.rooms[roomName].constructionSites = _.without(Memory.rooms[roomName].constructionSites, siteIDs[0]);
+        }
+    } else {
+        let site = Game.getObjectById(creep.memory.siteID);
+        if (site) {
+            let build = creep.build(site)
+            if (build === ERR_NOT_IN_RANGE) {
                 creep.moveTo(site, BUILD_PATH);
             }
-            break;
-        }else{
-            NoSites.push(roomName);
+        } else{
+            creep.memory.siteID='';
         }
-    }
-    if(NoSites.length===Object.keys(Game.rooms).length){
-        console.log("There are no Sites to build")
-        Reinforce(creep);
     }
 }
 
@@ -310,7 +314,7 @@ function ConductCollection(creep) {
         // Choose the closest dropped resource and move towards it
         const closestResource = creep.pos.findClosestByRange(validDroppedResources);
         if (creep.pickup(closestResource) === ERR_NOT_IN_RANGE) {
-            creep.moveTo(closestResource, {visualizePathStyle: {stroke: '#ffaa00'}});
+            creep.moveTo(closestResource, TOMBRAIDING_PATH);
         }
     } else {
         // Handle the case when there are no  dropped valid resources
@@ -327,7 +331,7 @@ function Haul(creep) {
     let sources = [
         Game.getObjectById(ZYNTHIUM_CONTAINER),
     ];
-    if(sources[0].store.getUsedCapacity()>1000){
+    if (sources[0].store.getUsedCapacity() > 1000) {
         WithdrawAlloys(creep, sources[0]);
         WithdrawEnergy(creep, sources[0]);
     }
@@ -377,5 +381,37 @@ function ClaimController(creep) {
     } else {
         // Handle the case when the controller is not present (optional)
         console.log("No controller found in the room.");
+    }
+}
+
+
+
+//incomplete
+function extendCreepLifespan(creep) {
+    // Check if the creep needs healing
+    if (creep.hits < creep.hitsMax) {
+        // Find all healers within range
+        let healers = creep.pos.findInRange(FIND_MY_CREEPS, 3, {
+            filter: c => c.getActiveBodyparts(HEAL) > 0
+        });
+
+        // Sort the healers by distance to the creep
+        healers.sort((a, b) => creep.pos.getRangeTo(a) - creep.pos.getRangeTo(b));
+
+        // If there are healers nearby, heal the creep
+        if (healers.length > 0) {
+            let healer = healers[0];
+            let healResult = healer.renewCreep(creep);
+            if (healResult === ERR_NOT_IN_RANGE) {
+                // Move the healer towards the creep if not in range
+                healer.moveTo(creep, { visualizePathStyle: { stroke: '#ffaa00' } });
+            } else if (healResult === OK) {
+                // Successful healing
+                console.log(`Healer ${healer.name} extended the lifespan of ${creep.name}`);
+            }
+        } else {
+            // No healers nearby to extend the creep's lifespan
+            console.log(`No healers found nearby to extend the lifespan of ${creep.name}`);
+        }
     }
 }

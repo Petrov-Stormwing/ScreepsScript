@@ -9,11 +9,11 @@ let roleRepairer = {
         let storage = Game.rooms['W59S4'].storage;
 
         if (creep.memory.repairing) {
-            if (ROOM.memory.damagedStructures.length > 0) {
-                creep.say('🚧 Repair');
-                Repair(creep);
-            } else {
-                Reinforce(creep);
+            for (let roomName in Game.rooms) {
+                if (Memory.rooms[roomName].damagedStructures.length > 0) {
+                    Repair(creep, roomName);
+                    break;
+                }
             }
         } else {
             creep.say('🔄 Recharge');
