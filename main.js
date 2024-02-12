@@ -1,7 +1,7 @@
 const _ = require('lodash');
-let roleHarvester = require('role.harvester');
+let roleHarvester = require('role.Harvester');
 let roleUpgrader = require('role.upgrader');
-let roleBuilder = require('role.builder');
+let roleBuilder = require('role.Builder');
 let roleHauler = require('role.hauler');
 let roleRepairer = require('role.Repairer');
 let roleCollector = require('role.Collector');
@@ -23,7 +23,7 @@ const roomData = {
         'spawner': 'Xel\'Invictus',
         'creepCounts': {
             'harvester': Memory.rooms['W59S4'].sourceIDs.length,
-            'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 25),
+            'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 35),
             'upgrader': Math.max(1, Game.rooms['W59S4'].storage.store[RESOURCE_ENERGY] / 100000),
             'builder': 2,
             'hauler': 2,
@@ -36,15 +36,14 @@ const roomData = {
             // Add more roles and counts as needed for the Room
         }
     },
-    // 'W59S5': {
-    //     'spawner': 'Xel\'Terminus',
-    //     'creepCounts': {
-    //         'harvester': 1,
-    //         'upgrader': 2,
-    //         'builder': 2,
-    //         // Add more roles and counts as needed for the Room
-    //     }
-    // }
+    'W59S5': {
+        'spawner': `Xel'Hydrogenius`,
+        'creepCounts': {
+            'harvester': 1,
+            // 'tombraider': 1,
+            // Add more roles and counts as needed for the Room
+        }
+    }
     // Add more rooms as needed
 };
 
@@ -54,10 +53,10 @@ const BodyPartsRenderer = {
     'upgrader': [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE],
     'builder': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
     'hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
-    'collector': [CARRY, CARRY, MOVE, MOVE],
+    'collector': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
     'tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
     'defender': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK],
-    'ranger': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK],
+    'ranger': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK],
     'supplier': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
     'claimer': [CLAIM, MOVE, MOVE],
 }
@@ -82,9 +81,11 @@ module.exports.loop = function () {
  * @param spawner
  */
 function BuildCreep(role, bodyParts, roleName, creepCounter, spawner) {
-    let creepsOfType = _.filter(Game.creeps, (creep) => creep.memory.role === role);
-
-    if (creepsOfType.length < creepCounter) {
+    let room = Game.spawns[spawner].room; // Get the room where the spawner is located
+    let creepsOfType = room.find(FIND_MY_CREEPS, {
+        filter: (creep) => creep.memory.role === role
+    });
+    if (creepsOfType && creepsOfType.length < creepCounter) {
         let newName = roleName + Game.time;
         console.log(`Spawning new ${roleName} in ${spawner}: ${newName}`);
         Game.spawns[spawner].spawnCreep(bodyParts, newName, {memory: {role: role}});
@@ -164,7 +165,7 @@ function CreepDrivers() {
  */
 function getDamagedStructures() {
     for (let roomName in Game.rooms) {
-        if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length <= 3) {
+        if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length === 0) {
             let room = Game.rooms[roomName];
             let damagedStructures = room.find(FIND_STRUCTURES, {
                 filter: structure => {
@@ -176,12 +177,28 @@ function getDamagedStructures() {
             });
 
             // Order the damaged structures by their hits difference
-            damagedStructures.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
+            // damagedStructures.sort((a, b) => (b.hitsMax - b.hits) - (a.hitsMax - a.hits));
 
             // Store the list of damaged structure IDs in Memory
             Memory.rooms[roomName].damagedStructures = _.map(damagedStructures, 'id');
         }
         console.log(`Structures to Repair [${roomName}]: ${Memory.rooms[roomName].damagedStructures.length}`)
+    }
+}
+
+/**
+ * Finds and puts in memory all Construction sites in the rooms I own.
+ */
+function getConstructionSites() {
+    for (let roomName in Game.rooms) {
+        if (!Memory.rooms[roomName].constructionSites || Memory.rooms[roomName].constructionSites.length === 0) {
+            let room = Game.rooms[roomName];
+            let sites = room.find(FIND_CONSTRUCTION_SITES);
+            if (sites) {
+                Memory.rooms[roomName].constructionSites = sites.map(site => site.id);
+            }
+        }
+        console.log(`Construction Sites for Room ${roomName}: ${Memory.rooms[roomName].constructionSites.length}`)
     }
 }
 
@@ -218,35 +235,23 @@ function getSources() {
 function getLinkTransfer() {
     for (let roomName in roomData) {
         let room = Game.rooms[roomName];
-        let links = room.find(FIND_MY_STRUCTURES, {
-            filter: structure => structure.structureType === STRUCTURE_LINK
-        });
+        if (room.controller.level >= 6) {
+            let links = room.find(FIND_MY_STRUCTURES, {
+                filter: structure => structure.structureType === STRUCTURE_LINK
+            });
 
-        // Find the closest link to storage
-        let closestLinkToStorage = room.storage.pos.findClosestByRange(links);
-        links = _.without(links, closestLinkToStorage);
-        for (let link of links) {
-            if (closestLinkToStorage.energy === 0 && link.energy >= 800) {
-                room.visual.line(link.pos.x, link.pos.y, closestLinkToStorage.pos.x, closestLinkToStorage.pos.y, {
-                    color: 'white',
-                    lineStyle: 'dashed'
-                });
-                link.transferEnergy(closestLinkToStorage);
+            // Find the closest link to storage
+            let closestLinkToStorage = room.storage.pos.findClosestByRange(links);
+            links = _.without(links, closestLinkToStorage);
+            for (let link of links) {
+                if (closestLinkToStorage.energy === 0 && link.energy >= 800) {
+                    room.visual.line(link.pos.x, link.pos.y, closestLinkToStorage.pos.x, closestLinkToStorage.pos.y, {
+                        color: 'white',
+                        lineStyle: 'dashed'
+                    });
+                    link.transferEnergy(closestLinkToStorage);
+                }
             }
-        }
-    }
-}
-
-/**
- * Finds and puts in memory all Construction sites in the rooms I own.
- */
-function getConstructionSites() {
-    for (let roomName in Game.rooms) {
-        let room = Game.rooms[roomName];
-        let sites = room.find(FIND_CONSTRUCTION_SITES);
-        if (sites) {
-            Memory.rooms[roomName].constructionSites = sites.map(site => site.id);
-            console.log(`Construction Sites for Room ${roomName}: ${Memory.rooms[roomName].constructionSites.length}`)
         }
     }
 }
