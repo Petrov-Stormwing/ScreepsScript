@@ -7,15 +7,17 @@ let roleBuilder = {
     run: function (creep) {
         setBuildingParameter(creep)
         let storage = Game.rooms['W59S4'].storage;
-
+        let noSties = 0;
         if (creep.memory.building) {
             for (let roomName in Game.rooms) {
                 if (Memory.rooms[roomName].constructionSites.length > 0) {
                     Build(creep, roomName);
+                } else {
+                    noSties++;
                 }
-                else{
-                    Reinforce(creep);
-                }
+            }
+            if (noSties === 2) {
+                Reinforce(creep);
             }
         } else {
             WithdrawEnergy(creep, storage);
