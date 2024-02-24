@@ -1,6 +1,6 @@
 const _ = require('lodash');
 let roleHarvester = require('role.Harvester');
-let roleUpgrader = require('role.upgrader');
+let roleUpgrader = require('role.Upgrader');
 let roleBuilder = require('role.Builder');
 let roleHauler = require('role.hauler');
 let roleRepairer = require('role.Repairer');
@@ -10,29 +10,27 @@ let roleClaimer = require('role.Claimer');
 let roleDefender = require('role.Defender');
 let roleTombraider = require('role.Tombraider');
 let roleRanger = require('role.Ranger');
+let roleCarrier = require('role.Carrier');
 
 global.ROOM = Game.rooms['W59S4'];
-global.NORTH_ENERGY_CONTAINER = '65b7e25609c2d1cf9e20b559';
-global.SOUTH_ENERGY_CONTAINER = '65b7e57973f23d398567fbc3';
-global.ZYNTHIUM_CONTAINER = '65c004cdfc811b3e490a8a12';
-global.CONTROLLER_ENERGY_CONTAINER_I = '65b7fc77ba73c30e2e6a9e67';
-global.CONTROLLER_ENERGY_CONTAINER_II = '65b8f767d93405714cd188e2';
+global.ZYNTHIUM_CONTAINER = '65c8065fadd2617162d9f072';
 
 const roomData = {
     'W59S4': {
         'spawner': 'Xel\'Invictus',
         'creepCounts': {
             'harvester': Memory.rooms['W59S4'].sourceIDs.length,
-            'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 35),
+            'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 20),
             'upgrader': Math.max(1, Game.rooms['W59S4'].storage.store[RESOURCE_ENERGY] / 100000),
-            'builder': 2,
+            'builder': 1,
             'hauler': 2,
             'collector': 1,
             'tombraider': 1,
             'defender': 1,
             'ranger': 1,
-            'claimer': 0,
+            // 'claimer': 1,
             'supplier': 1,
+            // 'carrier':1,
             // Add more roles and counts as needed for the Room
         }
     },
@@ -40,7 +38,13 @@ const roomData = {
         'spawner': `Xel'Hydrogenius`,
         'creepCounts': {
             'harvester': 1,
-            // 'tombraider': 1,
+            'repairer': 2,
+            'upgrader': 2,
+            'hauler': 1,
+            // 'collector': 1,
+            'builder': 1,
+            // 'carrier': 1,
+            'tombraider': 1,
             // Add more roles and counts as needed for the Room
         }
     }
@@ -48,13 +52,42 @@ const roomData = {
 };
 
 const BodyPartsRenderer = {
-    'harvester': [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE],
-    'repairer': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+    'minor-harvester': [WORK, WORK, CARRY, MOVE],
+    'lesser-harvester': [WORK, WORK, WORK, CARRY, MOVE],
+    'greater-harvester': [WORK, WORK, WORK, WORK, CARRY, MOVE],
+    'harvester': [WORK, WORK, WORK, WORK, WORK, CARRY, MOVE],
+
+    'minor-repairer': [WORK, CARRY, MOVE, MOVE],
+    'lesser-repairer': [WORK, CARRY, CARRY, MOVE, MOVE],
+    'greater-repairer': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
+    'repairer': [WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+
+    'minor-upgrader': [WORK, CARRY, MOVE, MOVE],
+    'lesser-upgrader': [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
+    'greater-upgrader': [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE],
     'upgrader': [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE],
-    'builder': [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
-    'hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
-    'collector': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
-    'tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+
+    'minor-builder': [WORK, CARRY, MOVE, MOVE],
+    'lesser-builder': [WORK, WORK, CARRY, MOVE, MOVE],
+    'greater-builder': [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
+    'builder': [WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+
+    'minor-collector': [CARRY, CARRY, MOVE, MOVE],
+    'lesser-collector': [CARRY, CARRY, MOVE, MOVE],
+    'greater-collector': [CARRY, CARRY, MOVE, MOVE],
+    'collector': [CARRY, CARRY, MOVE, MOVE],
+
+
+    'minor-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+    'lesser-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+    'greater-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+    'hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+
+    'minor-tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+    'lesser-tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+    'tombraider': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+
+    'carrier': [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
     'defender': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK],
     'ranger': [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK],
     'supplier': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
@@ -101,7 +134,8 @@ function BuildCreepsForRoom(roomName) {
     const spawner = room.spawner;
 
     for (let role in room.creepCounts) {
-        const bodyParts = BodyPartsRenderer[role];
+        const roleByController = getCreepBodyParts(role, Game.rooms[roomName].controller.level);
+        const bodyParts = BodyPartsRenderer[roleByController];
         const creepCounter = room.creepCounts[role];
         BuildCreep(role, bodyParts, role.charAt(0).toUpperCase() + role.slice(1), creepCounter, spawner);
     }
@@ -114,6 +148,20 @@ function BuildCreepsForRoom(roomName) {
             Game.spawns[spawner].pos.x + 1,
             Game.spawns[spawner].pos.y,
             {align: 'left', opacity: 0.8});
+    }
+}
+
+function getCreepBodyParts(role, controllerLevel) {
+    // Retrieve body parts based on role and controller level
+    switch (controllerLevel) {
+        case 1:
+            return role = "minor" + '-' + role;
+        case 2:
+            return role = "lesser" + '-' + role;
+        // case 4:
+        //     return role = "greater" + '-' + role;
+        default:
+            return role;
     }
 }
 
@@ -147,7 +195,8 @@ function CreepDrivers() {
         'claimer': roleClaimer,
         'defender': roleDefender,
         'tombraider': roleTombraider,
-        'ranger': roleRanger
+        'ranger': roleRanger,
+        'carrier': roleCarrier
     };
 
     // Initialize the Role of each Creep
@@ -165,7 +214,7 @@ function CreepDrivers() {
  */
 function getDamagedStructures() {
     for (let roomName in Game.rooms) {
-        if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length === 0) {
+        if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length < 3) {
             let room = Game.rooms[roomName];
             let damagedStructures = room.find(FIND_STRUCTURES, {
                 filter: structure => {
