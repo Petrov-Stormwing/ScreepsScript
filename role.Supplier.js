@@ -8,6 +8,8 @@ let roleSupplier = {
         if (creep.memory.suppling) {
             TransferEnergy(creep, creep.room.storage);
         } else {
+            Salvage(creep);
+            creep.moveTo(new RoomPosition(24,20,creep.room.name))
             WithdrawEnergy(creep, Game.getObjectById('65c28768c5111521aad4be4d'));
         }
     }
@@ -16,7 +18,7 @@ let roleSupplier = {
 module.exports = roleSupplier;
 
 function setSupplierParameters(creep) {
-    // Check Energy Capacity - if none, stop building and go harvest
+    // Check Energy Capacity - if none, stop supplying and go harvest
     if (creep.memory.suppling && creep.store[RESOURCE_ENERGY] === 0) {
         creep.memory.suppling = false;
         creep.say('🔄 Recharge');
@@ -28,23 +30,3 @@ function setSupplierParameters(creep) {
     }
 }
 
-function SupplyUpgrader(supplier) {
-    // console.log(upgrader.store[RESOURCE_ENERGY]);
-    let upgrader = FindUpgrader(supplier);
-    if (upgrader && supplier.store[RESOURCE_ENERGY] > 0){
-        if (supplier.transfer(upgrader, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-            supplier.moveTo(upgrader, {visualizePathStyle: {stroke: '#ffffff'}});
-        }
-    }
-}
-
-function FindUpgrader(supplier) {
-    // Find all friendly harvester creeps within a range that have energy
-    let sourceCreeps = Object.values(Game.creeps).filter(upgrader => upgrader.memory.role === 'upgrader');
-
-    // Sort the source creeps based on their energy level (ascending order)
-    sourceCreeps.sort((a, b) => a.store[RESOURCE_ENERGY] - b.store[RESOURCE_ENERGY]);
-
-    // Return the harvester creep with the highest energy (first in the sorted array)
-    return sourceCreeps[0];
-}

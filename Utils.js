@@ -3,12 +3,10 @@
 const _ = require("lodash");
 
 //Global Functions and Constants
-global.getSpawner = getSpawner;
-global.getContainers = getContainers;
+global.getEnergyContainers = getEnergyContainers;
+global.getEmptyContainers = getEmptyContainers;
 global.getTombstones = getTombstones;
-global.getExtensions = getExtensions;
 global.getNearestContainer = getNearestContainer;
-global.getNearestExtension = getNearestExtension;
 global.getCreepsByRole = getCreepsByRole;
 global.Mine = Mine;
 global.Salvage = Salvage;
@@ -24,6 +22,7 @@ global.Haul = Haul;
 global.ReserveController = ReserveController;
 global.ClaimController = ClaimController;
 global.extendCreepLifespan = extendCreepLifespan;
+global.SupplyUpgrader = SupplyUpgrader;
 
 //Constants for PathStyle
 const MINE_PATH = {visualizePathStyle: {stroke: '#ff0000'}};
@@ -39,28 +38,21 @@ const TOMBRAIDING_PATH = {visualizePathStyle: {stroke: '#000000'}};
 const REINFORCE_LEVEL = 30000;
 const RAMPART = [
     new RoomPosition(11, 19, Game.rooms['W59S4'].name),
-    new RoomPosition(23, 13, Game.rooms['W59S4'].name),
-    // new RoomPosition(11, 42, Game.rooms['W59S4'].name),
-    // new RoomPosition(6, 35, Game.rooms['W59S4'].name),
-    // new RoomPosition(12, 20, Game.rooms['W59S4'].name),
 ];
 
-function getSpawner(creep) {
-    return creep.room.find(FIND_MY_SPAWNS)[0];
-}
-
-// Find all containers in the room
-function getContainers(creep) {
+// Find all containers in the room that contain Energy
+function getEnergyContainers(creep) {
     return creep.room.find(FIND_STRUCTURES, {
         filter: structure => structure.structureType === STRUCTURE_CONTAINER
+            && structure.store[RESOURCE_ENERGY] > 0
     });
 }
 
-// Find all extensions in the room
-function getExtensions(creep) {
+// Find all containers in the room that are empty
+function getEmptyContainers(creep) {
     return creep.room.find(FIND_STRUCTURES, {
-        filter: (structure) => structure.structureType === STRUCTURE_EXTENSION
-            && structure.store[RESOURCE_ENERGY] < EXTENSION_ENERGY_CAPACITY[creep.room.controller.level]
+        filter: structure => structure.structureType === STRUCTURE_CONTAINER
+            && structure.store.getUsedCapacity() < CONTAINER_CAPACITY
     });
 }
 
@@ -69,27 +61,17 @@ function getTombstones(creep) {
     let tombstones = creep.room.find(FIND_TOMBSTONES, {
         filter: tombstone => tombstone.store && Object.keys(tombstone.store).length > 0
     });
-    console.log("Number of Tombstones: " + tombstones.length);
+    // console.log("Number of Tombstones: " + tombstones.length);
     return tombstones;
 }
 
 // Find nearest single container in the room
 function getNearestContainer(creep) {
-    let containers = getContainers(creep);
+    let containers = getEmptyContainers(creep);
     if (containers.length > 0) {
         return creep.pos.findClosestByPath(containers);
     } else {
         console.log("No Containers in this Room")
-    }
-}
-
-// Find nearest single extension in the room
-function getNearestExtension(creep) {
-    let extensions = getExtensions(creep)
-    if (extensions.length > 0) {
-        return creep.pos.findClosestByPath(extensions);
-    } else {
-        //console.log(`No Empty Extensions in Room: ${creep.room.name}`)
     }
 }
 
@@ -160,7 +142,7 @@ function Salvage(creep) {
  * @param creep
  */
 function Reinforce(creep) {
-    let defences = ROOM.find(FIND_STRUCTURES, {
+    let defences = creep.room.find(FIND_STRUCTURES, {
         filter: structure => {
             return (structure.structureType === STRUCTURE_WALL
                     || structure.structureType === STRUCTURE_RAMPART)
@@ -227,8 +209,8 @@ function Build(creep, roomName) {
             if (build === ERR_NOT_IN_RANGE) {
                 creep.moveTo(site, BUILD_PATH);
             }
-        } else{
-            creep.memory.siteID='';
+        } else {
+            creep.memory.siteID = '';
         }
     }
 }
@@ -287,7 +269,7 @@ function Tombraiding(creep) {
     let tombstones = getTombstones(creep)
 
     if (tombstones.length > 0) {
-        console.log("Number of Tombstones: " + tombstones.length)
+        // console.log("Number of Tombstones: " + tombstones.length)
 
         // Harvest from the nearest tombstone
         if (creep.withdraw(tombstones[0], Object.keys(tombstones[0].store)[0]) === ERR_NOT_IN_RANGE) {
@@ -295,7 +277,7 @@ function Tombraiding(creep) {
         }
     } else {
         creep.say('🔄 Idle');
-        creep.moveTo(new RoomPosition(16, 36, ROOM.name))
+        creep.moveTo(new RoomPosition(16, 40, creep.room.name))
     }
 }
 
@@ -319,7 +301,7 @@ function ConductCollection(creep) {
     } else {
         // Handle the case when there are no  dropped valid resources
         creep.say('🔄 Idle');
-        creep.moveTo(new RoomPosition(14, 36, ROOM.name));
+        creep.moveTo(new RoomPosition(13, 40, creep.room.name));
     }
 }
 
@@ -385,7 +367,6 @@ function ClaimController(creep) {
 }
 
 
-
 //incomplete
 function extendCreepLifespan(creep) {
     // Check if the creep needs healing
@@ -404,7 +385,7 @@ function extendCreepLifespan(creep) {
             let healResult = healer.renewCreep(creep);
             if (healResult === ERR_NOT_IN_RANGE) {
                 // Move the healer towards the creep if not in range
-                healer.moveTo(creep, { visualizePathStyle: { stroke: '#ffaa00' } });
+                healer.moveTo(creep, {visualizePathStyle: {stroke: '#ffaa00'}});
             } else if (healResult === OK) {
                 // Successful healing
                 console.log(`Healer ${healer.name} extended the lifespan of ${creep.name}`);
@@ -414,4 +395,26 @@ function extendCreepLifespan(creep) {
             console.log(`No healers found nearby to extend the lifespan of ${creep.name}`);
         }
     }
+}
+
+
+function SupplyUpgrader(supplier) {
+    // console.log(upgrader.store[RESOURCE_ENERGY]);
+    let upgrader = FindUpgrader(supplier);
+    if (upgrader && supplier.store[RESOURCE_ENERGY] > 0){
+        if (supplier.transfer(upgrader, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+            supplier.moveTo(upgrader, {visualizePathStyle: {stroke: '#ffffff'}});
+        }
+    }
+}
+
+function FindUpgrader(supplier) {
+    // Find all friendly harvester creeps within a range that have energy
+    let sourceCreeps = Object.values(Game.creeps).filter(upgrader => upgrader.memory.role === 'upgrader' && upgrader.room.name===supplier.room.name);
+
+    // Sort the source creeps based on their energy level (ascending order)
+    sourceCreeps.sort((a, b) => a.store[RESOURCE_ENERGY] - b.store[RESOURCE_ENERGY]);
+
+    // Return the harvester creep with the highest energy (first in the sorted array)
+    return sourceCreeps[0];
 }
