@@ -10,13 +10,22 @@ let roleUpgrader = {
 
             //Define Recharging Strategy as per room Level
         } else {
-            if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 0) {
-                RechargeCreep(creep, 'S')
-            } else {
-                RechargeCreep(creep, 'C')
-            }
-
-            if (Game.rooms[creep.room.name].controller.level === 1) {
+            let chargingPoint = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 5, {
+                filter: s => s.structureType === STRUCTURE_CONTAINER
+                    || s.structureType === STRUCTURE_STORAGE
+                    || s.structureType === STRUCTURE_LINK
+            });
+            if (chargingPoint.length > 0) {
+                if (chargingPoint[0].structureType === STRUCTURE_STORAGE) {
+                    RechargeCreep(creep, 'S')
+                }
+                if (chargingPoint[0].structureType === STRUCTURE_CONTAINER) {
+                    RechargeCreep(creep, 'C')
+                }
+                if (chargingPoint[0].structureType === STRUCTURE_LINK) {
+                    RechargeCreep(creep, 'L')
+                }
+            } else if (creep.room.controller.level === 1) {
                 RechargeCreep(creep, 'M')
             }
         }

@@ -2,7 +2,7 @@ const _ = require('lodash');
 let roleHarvester = require('role.Harvester');
 let roleUpgrader = require('role.Upgrader');
 let roleBuilder = require('role.Builder');
-let roleHauler = require('role.hauler');
+let roleHauler = require('role.Hauler');
 let roleRepairer = require('role.Repairer');
 let roleCollector = require('role.Collector');
 let roleSupplier = require('role.Supplier');
@@ -11,6 +11,7 @@ let roleDefender = require('role.Defender');
 let roleTombraider = require('role.Tombraider');
 let roleRanger = require('role.Ranger');
 let roleCarrier = require('role.Carrier');
+let roleManager = require('role.Manager');
 
 global.ROOM = Game.rooms['W59S4'];
 global.ZYNTHIUM_CONTAINER = '65c8065fadd2617162d9f072';
@@ -20,16 +21,16 @@ const roomData = {
         'spawner': 'Xel\'Invictus',
         'creepCounts': {
             'harvester': Memory.rooms['W59S4'].sourceIDs.length,
-            'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 20),
             'upgrader': Math.max(1, Game.rooms['W59S4'].storage.store[RESOURCE_ENERGY] / 100000),
             'builder': 1,
             'hauler': 2,
             'collector': 1,
             'tombraider': 1,
-            'defender': 1,
-            'ranger': 1,
+            // 'defender': 1,
+            // 'ranger': 1,
             // 'claimer': 1,
             'supplier': 1,
+            'manager': 1,
             // 'carrier':1,
             // Add more roles and counts as needed for the Room
         }
@@ -38,11 +39,11 @@ const roomData = {
         'spawner': `Xel'Hydrogenius`,
         'creepCounts': {
             'harvester': 1,
-            'repairer': 2,
+            'repairer': Math.max(1, Memory.rooms['W59S5'].damagedStructures.length / 20),
             'upgrader': 2,
-            'hauler': 1,
-            // 'collector': 1,
-            'builder': 1,
+            'hauler': 2,
+            'collector': 1,
+            // 'builder': 1,
             // 'carrier': 1,
             'tombraider': 1,
             // Add more roles and counts as needed for the Room
@@ -82,6 +83,8 @@ const BodyPartsRenderer = {
     'lesser-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
     'greater-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
     'hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+
+    'manager': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
 
     'minor-tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
     'lesser-tombraider': [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
@@ -182,6 +185,9 @@ function CreepDrivers() {
     getConstructionSites();
     getSources();
     getLinkTransfer();
+    Tower();
+    Factory();
+
 
     // Define a mapping of roles to role functions
     const roleFunctions = {
@@ -196,7 +202,8 @@ function CreepDrivers() {
         'defender': roleDefender,
         'tombraider': roleTombraider,
         'ranger': roleRanger,
-        'carrier': roleCarrier
+        'carrier': roleCarrier,
+        'manager': roleManager,
     };
 
     // Initialize the Role of each Creep
@@ -214,7 +221,7 @@ function CreepDrivers() {
  */
 function getDamagedStructures() {
     for (let roomName in Game.rooms) {
-        if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length < 3) {
+        if (!Memory.rooms[roomName].damagedStructures || Memory.rooms[roomName].damagedStructures.length <= 0) {
             let room = Game.rooms[roomName];
             let damagedStructures = room.find(FIND_STRUCTURES, {
                 filter: structure => {
@@ -301,6 +308,69 @@ function getLinkTransfer() {
                     link.transferEnergy(closestLinkToStorage);
                 }
             }
+        }
+    }
+}
+
+function Factory() {
+    let factory = Game.getObjectById('65d71e80e4219d254f628572')
+
+    // Check if the factory is not on cooldown
+    if (factory.cooldown > 0) {
+        // console.log("Factory is on cooldown. Cannot transform Zynthium to bars.");
+        return;
+    }
+
+    // Check if the factory has enough resources and space to perform the transformation
+    if (factory.store.getUsedCapacity(RESOURCE_ZYNTHIUM) < 100 || factory.store.getFreeCapacity() < 100) {
+        // console.log("Insufficient resources or space in the factory.");
+        return;
+    }
+
+    // Perform the transformation
+    let result = factory.produce(RESOURCE_ZYNTHIUM_BAR);
+
+    if (result === OK) {
+        // console.log("Transformation of Zynthium to Zynthium bars successful.");
+    } else {
+        // console.log("Error: Unable to transform Zynthium to Zynthium bars. Error code:", result);
+    }
+}
+
+function Tower() {
+    let roomName = 'W59S4';
+    // Retrieve the room where the tower is located
+    let room = Game.rooms[roomName];
+
+    // Find the tower in the room
+    let tower = room.find(FIND_MY_STRUCTURES, {
+        filter: s => s.structureType === STRUCTURE_TOWER
+    });
+
+    // Find the enemy creep in the room
+    let enemy = room.find(FIND_HOSTILE_CREEPS);
+    if (tower.length > 0) {
+
+        // Check if tower and enemy exist
+        if (enemy && enemy.length > 0) {
+            tower[0].attack(enemy[0]);
+        }
+
+        // Conduct Repairs
+        else if (Memory.rooms[roomName].damagedStructures.length > 0) {
+            for (let structureId of Memory.rooms[roomName].damagedStructures) {
+                let structure = Game.getObjectById(structureId);
+                if (structure) {
+                    tower[0].repair(structure);
+                    if (structure.hits === structure.hitsMax) {
+                        Memory.rooms[roomName].damagedStructures = _.without(Memory.rooms[roomName].damagedStructures, structure.id);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        } else {
+            Reinforce(tower[0])
         }
     }
 }
