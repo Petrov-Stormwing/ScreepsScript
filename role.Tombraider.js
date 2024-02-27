@@ -1,5 +1,3 @@
-require('ResourcesUtility')
-
 const roleTombraider = {
 
     /** @param {Creep} creep **/
@@ -8,20 +6,15 @@ const roleTombraider = {
         if (creep.memory.looting) {
             creep.say('🚧 Loot');
             Tombraiding(creep);
-            // Haul(creep);
-            // WithdrawEnergy(creep, ROOM.storage);
         } else {
             creep.say('🔄 Deploy');
-            if (creep.store[RESOURCE_ENERGY] > 0) {
-                StoreEnergy(creep);
-            } else if (creep.store.getUsedCapacity() > 0) {
-                TransferAlloys(creep, ROOM.storage);
-            }
+            RechargeStorage(creep);
         }
     }
 };
 
 module.exports = roleTombraider;
+
 function setLootingParameter(creep) {
     // Check Energy Capacity - if none, stop building and go harvest
     if (creep.memory.looting && creep.store.getFreeCapacity() === 0) {

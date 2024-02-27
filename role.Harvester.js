@@ -22,7 +22,7 @@ let roleHarvester = {
             }
         }
         if (creep.store[RESOURCE_ZYNTHIUM] > 0) {
-            TransferAlloys(creep, getNearestContainer(creep));
+            TransferEnergy(creep, getNearestContainer(creep), RESOURCE_ZYNTHIUM);
         }
     }
 };

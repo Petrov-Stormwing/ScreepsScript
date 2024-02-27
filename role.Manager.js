@@ -8,16 +8,16 @@ let roleManager = {
             if (creep.store[RESOURCE_ENERGY] > 0) {
                 TransferEnergy(creep, factory);
             }
-            TransferAlloys(creep, factory);
+            TransferEnergy(creep, factory, RESOURCE_ZYNTHIUM);
         } else {
             let harvestContainer = Game.getObjectById('65db719aafa71d7c2a2067e9')
             if (factory.store[RESOURCE_ENERGY] < 1000) {
                 WithdrawEnergy(creep, creep.room.storage);
             } else {
                 if (harvestContainer.store[RESOURCE_ZYNTHIUM] > 200) {
-                    WithdrawAlloys(creep, harvestContainer)
+                    WithdrawEnergy(creep, harvestContainer, RESOURCE_ZYNTHIUM)
                 } else {
-                    WithdrawAlloys(creep, creep.room.storage)
+                    WithdrawEnergy(creep, creep.room.storage, RESOURCE_ZYNTHIUM)
                 }
             }
         }

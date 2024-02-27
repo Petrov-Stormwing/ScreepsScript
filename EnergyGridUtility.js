@@ -83,7 +83,6 @@ function RechargeContainer(creep, resource = RESOURCE_ENERGY) {
 function RechargeLink(creep) {
     let allLinks = creep.room.find(FIND_MY_STRUCTURES, {
         filter: structure => structure.structureType === STRUCTURE_LINK
-            && structure.energy < structure.energyCapacity
     });
     if (allLinks.length > 0) {
         let link = creep.pos.findClosestByPath(allLinks);
@@ -100,7 +99,9 @@ function RechargeLink(creep) {
 function RechargeStorage(creep) {
     let storage = creep.room.storage;
     if (storage) {
-        TransferEnergy(creep, storage)
+        for (let resource in creep.store) {
+            TransferEnergy(creep, storage, resource)
+        }
     }
 }
 
@@ -109,7 +110,7 @@ function RechargeStorage(creep) {
  * @param creep
  * @returns {boolean}
  */
-function RechargeTower(creep){
+function RechargeTower(creep) {
     //Find the Towers
     let allTowers = creep.room.find(FIND_STRUCTURES, {
         filter: (structure) => structure.structureType === STRUCTURE_TOWER
@@ -205,7 +206,7 @@ function SupplyFactory(creep) {
         filter: structure => structure.structureType === STRUCTURE_FACTORY
     });
     if (factory !== null) {
-        TransferAlloys(creep);
+        TransferEnergy(creep, factory, RESOURCE_ZYNTHIUM);
     }
 }
 
@@ -214,7 +215,7 @@ function SupplyTerminal(creep) {
         filter: structure => structure.structureType === STRUCTURE_TERMINAL
     });
     if (terminal !== null) {
-        TransferAlloys(creep);
+        TransferEnergy(creep, terminal, RESOURCE_ZYNTHIUM);
     }
 }
 

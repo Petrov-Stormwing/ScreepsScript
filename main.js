@@ -76,7 +76,7 @@ const BodyPartsRenderer = {
     'minor-collector': [CARRY, CARRY, MOVE, MOVE],
     'lesser-collector': [CARRY, CARRY, MOVE, MOVE],
     'greater-collector': [CARRY, CARRY, MOVE, MOVE],
-    'collector': [CARRY, CARRY, MOVE, MOVE],
+    'collector': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
 
 
     'minor-hauler': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],

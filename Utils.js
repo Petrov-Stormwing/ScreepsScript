@@ -58,11 +58,9 @@ function getEmptyContainers(creep) {
 
 // Find all Tombstones in the room
 function getTombstones(creep) {
-    let tombstones = creep.room.find(FIND_TOMBSTONES, {
+    return creep.room.find(FIND_TOMBSTONES, {
         filter: tombstone => tombstone.store && Object.keys(tombstone.store).length > 0
     });
-    // console.log("Number of Tombstones: " + tombstones.length);
-    return tombstones;
 }
 
 // Find nearest single container in the room
@@ -277,7 +275,9 @@ function Tombraiding(creep) {
         }
     } else {
         creep.say('🔄 Idle');
-        creep.moveTo(new RoomPosition(16, 40, creep.room.name))
+        RechargeStorage(creep);
+        if (creep.store.getUsedCapacity() === 0)
+            creep.moveTo(new RoomPosition(16, 40, creep.room.name))
     }
 }
 
@@ -301,12 +301,15 @@ function ConductCollection(creep) {
     } else {
         // Handle the case when there are no  dropped valid resources
         creep.say('🔄 Idle');
-        creep.moveTo(new RoomPosition(13, 40, creep.room.name));
+        RechargeStorage(creep);
+        if (creep.store.getUsedCapacity() === 0)
+            creep.moveTo(new RoomPosition(13, 40, creep.room.name));
     }
 }
 
 /**
  * Conducts Hauling of energy in case Link is not available
+ * @deprecated
  * @param creep
  */
 function Haul(creep) {
@@ -314,7 +317,7 @@ function Haul(creep) {
         Game.getObjectById(ZYNTHIUM_CONTAINER),
     ];
     if (sources[0].store.getUsedCapacity() > 1000) {
-        WithdrawAlloys(creep, sources[0]);
+        Withdraw(creep, sources[0]);
         WithdrawEnergy(creep, sources[0]);
     }
 }
@@ -401,7 +404,7 @@ function extendCreepLifespan(creep) {
 function SupplyUpgrader(supplier) {
     // console.log(upgrader.store[RESOURCE_ENERGY]);
     let upgrader = FindUpgrader(supplier);
-    if (upgrader && supplier.store[RESOURCE_ENERGY] > 0){
+    if (upgrader && supplier.store[RESOURCE_ENERGY] > 0) {
         if (supplier.transfer(upgrader, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
             supplier.moveTo(upgrader, {visualizePathStyle: {stroke: '#ffffff'}});
         }
@@ -410,7 +413,7 @@ function SupplyUpgrader(supplier) {
 
 function FindUpgrader(supplier) {
     // Find all friendly harvester creeps within a range that have energy
-    let sourceCreeps = Object.values(Game.creeps).filter(upgrader => upgrader.memory.role === 'upgrader' && upgrader.room.name===supplier.room.name);
+    let sourceCreeps = Object.values(Game.creeps).filter(upgrader => upgrader.memory.role === 'upgrader' && upgrader.room.name === supplier.room.name);
 
     // Sort the source creeps based on their energy level (ascending order)
     sourceCreeps.sort((a, b) => a.store[RESOURCE_ENERGY] - b.store[RESOURCE_ENERGY]);
