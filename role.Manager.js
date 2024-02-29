@@ -4,12 +4,15 @@ let roleManager = {
     run: function (creep) {
         setManagerParameter(creep)
         let factory = Game.getObjectById('65d71e80e4219d254f628572');
+        let terminal= Game.getObjectById('65d72196e456720d57347646');
         if (creep.memory.managing) {
+            // TransferEnergy(creep,terminal,RESOURCE_ZYNTHIUM_BAR);
             if (creep.store[RESOURCE_ENERGY] > 0) {
                 TransferEnergy(creep, factory);
             }
             TransferEnergy(creep, factory, RESOURCE_ZYNTHIUM);
         } else {
+            // WithdrawEnergy(creep,factory,RESOURCE_ZYNTHIUM_BAR)
             let harvestContainer = Game.getObjectById('65db719aafa71d7c2a2067e9')
             if (factory.store[RESOURCE_ENERGY] < 1000) {
                 WithdrawEnergy(creep, creep.room.storage);

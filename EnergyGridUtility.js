@@ -152,7 +152,7 @@ function RechargeCreep(creep, store = 'S') {
             break;
         case 'L':
             let link = creep.room.find(FIND_STRUCTURES, {
-                filter: container => container.structureType === STRUCTURE_CONTAINER
+                filter: container => container.structureType === STRUCTURE_LINK
                     && container.store[RESOURCE_ENERGY] > 0
             });
             if (link) {

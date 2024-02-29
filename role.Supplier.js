@@ -6,11 +6,24 @@ let roleSupplier = {
     run: function (creep) {
         setSupplierParameters(creep)
         if (creep.memory.suppling) {
-            TransferEnergy(creep, creep.room.storage);
+            if(creep.room.name==='W59S5'){
+                let link=creep.room.storage.pos.findInRange(FIND_STRUCTURES,1,{
+                    filter: structure=>structure.structureType===STRUCTURE_LINK
+                });
+                TransferEnergy(creep, link[0]);
+            }else{
+                TransferEnergy(creep, creep.room.storage);
+            }
         } else {
             Salvage(creep);
-            creep.moveTo(new RoomPosition(24,20,creep.room.name))
-            WithdrawEnergy(creep, Game.getObjectById('65c28768c5111521aad4be4d'));
+            if(creep.room.name==='W59S5'){
+                creep.moveTo(new RoomPosition(13,43,creep.room.name))
+                WithdrawEnergy(creep, creep.room.storage);
+            }else{
+                creep.moveTo(new RoomPosition(24,20,creep.room.name))
+                WithdrawEnergy(creep, Game.getObjectById('65c28768c5111521aad4be4d'));
+            }
+
         }
     }
 };

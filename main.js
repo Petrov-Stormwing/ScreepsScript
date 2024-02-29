@@ -21,8 +21,9 @@ const roomData = {
         'spawner': 'Xel\'Invictus',
         'creepCounts': {
             'harvester': Memory.rooms['W59S4'].sourceIDs.length,
+            // 'repairer': Math.max(1, Memory.rooms['W59S4'].damagedStructures.length / 20),
             'upgrader': Math.max(1, Game.rooms['W59S4'].storage.store[RESOURCE_ENERGY] / 100000),
-            'builder': 1,
+            // 'builder': 1,
             'hauler': 2,
             'collector': 1,
             'tombraider': 1,
@@ -39,13 +40,14 @@ const roomData = {
         'spawner': `Xel'Hydrogenius`,
         'creepCounts': {
             'harvester': 1,
-            'repairer': Math.max(1, Memory.rooms['W59S5'].damagedStructures.length / 20),
-            'upgrader': 2,
-            'hauler': 2,
-            'collector': 1,
+            // 'repairer': Math.max(1, Memory.rooms['W59S5'].damagedStructures.length / 20),
+            'upgrader': Math.max(1, Game.rooms['W59S5'].storage.store[RESOURCE_ENERGY] / 100000),
             // 'builder': 1,
-            // 'carrier': 1,
+            'hauler': 1,
+            'collector': 1,
             'tombraider': 1,
+            'supplier': 1,
+            // 'carrier': 1,
             // Add more roles and counts as needed for the Room
         }
     }
@@ -291,7 +293,8 @@ function getSources() {
 function getLinkTransfer() {
     for (let roomName in roomData) {
         let room = Game.rooms[roomName];
-        if (room.controller.level >= 6) {
+        if (room.controller.level >= 5) {
+            //find the links
             let links = room.find(FIND_MY_STRUCTURES, {
                 filter: structure => structure.structureType === STRUCTURE_LINK
             });
@@ -299,13 +302,28 @@ function getLinkTransfer() {
             // Find the closest link to storage
             let closestLinkToStorage = room.storage.pos.findClosestByRange(links);
             links = _.without(links, closestLinkToStorage);
-            for (let link of links) {
-                if (closestLinkToStorage.energy === 0 && link.energy >= 800) {
-                    room.visual.line(link.pos.x, link.pos.y, closestLinkToStorage.pos.x, closestLinkToStorage.pos.y, {
-                        color: 'white',
-                        lineStyle: 'dashed'
-                    });
-                    link.transferEnergy(closestLinkToStorage);
+
+            //Find the closest link to controller
+            let closestLinkToController = room.controller.pos.findClosestByRange(links);
+            links = _.without(links, closestLinkToController);
+
+            if (roomName === 'W59S5') {
+                closestLinkToStorage.transferEnergy(closestLinkToController);
+            } else {
+                for (let link of links) {
+                    if (closestLinkToController.energy === 0 && link.energy === 800) {
+                        room.visual.line(link.pos.x, link.pos.y, closestLinkToController.pos.x, closestLinkToController.pos.y, {
+                            color: 'blue',
+                            lineStyle: 'dashed'
+                        });
+                        link.transferEnergy(closestLinkToController);
+                    } else if(closestLinkToStorage.energy === 0 && link.energy === 800){
+                        room.visual.line(link.pos.x, link.pos.y, closestLinkToStorage.pos.x, closestLinkToStorage.pos.y, {
+                            color: 'white',
+                            lineStyle: 'dashed'
+                        });
+                        link.transferEnergy(closestLinkToStorage);
+                    }
                 }
             }
         }
@@ -338,39 +356,40 @@ function Factory() {
 }
 
 function Tower() {
-    let roomName = 'W59S4';
-    // Retrieve the room where the tower is located
-    let room = Game.rooms[roomName];
+    for (let roomName in roomData) {
+        // Retrieve the room where the tower is located
+        let room = Game.rooms[roomName];
 
-    // Find the tower in the room
-    let tower = room.find(FIND_MY_STRUCTURES, {
-        filter: s => s.structureType === STRUCTURE_TOWER
-    });
+        // Find the tower in the room
+        let tower = room.find(FIND_MY_STRUCTURES, {
+            filter: s => s.structureType === STRUCTURE_TOWER
+        });
 
-    // Find the enemy creep in the room
-    let enemy = room.find(FIND_HOSTILE_CREEPS);
-    if (tower.length > 0) {
+        // Find the enemy creep in the room
+        let enemy = room.find(FIND_HOSTILE_CREEPS);
+        if (tower.length > 0) {
 
-        // Check if tower and enemy exist
-        if (enemy && enemy.length > 0) {
-            tower[0].attack(enemy[0]);
-        }
+            // Check if tower and enemy exist
+            if (enemy && enemy.length > 0) {
+                tower[0].attack(enemy[0]);
+            }
 
-        // Conduct Repairs
-        else if (Memory.rooms[roomName].damagedStructures.length > 0) {
-            for (let structureId of Memory.rooms[roomName].damagedStructures) {
-                let structure = Game.getObjectById(structureId);
-                if (structure) {
-                    tower[0].repair(structure);
-                    if (structure.hits === structure.hitsMax) {
-                        Memory.rooms[roomName].damagedStructures = _.without(Memory.rooms[roomName].damagedStructures, structure.id);
-                    } else {
-                        break;
+            // Conduct Repairs
+            if (Memory.rooms[roomName].damagedStructures.length > 0) {
+                for (let s = 0; s < tower.length; s++) {
+                    let structure = Game.getObjectById(Memory.rooms[roomName].damagedStructures[s]);
+                    if (structure) {
+                        tower[s].repair(structure);
+                        if (structure.hits === structure.hitsMax) {
+                            Memory.rooms[roomName].damagedStructures = _.without(Memory.rooms[roomName].damagedStructures, structure.id);
+                        } else {
+                            break;
+                        }
                     }
                 }
+            } else {
+                Reinforce(tower[0])
             }
-        } else {
-            Reinforce(tower[0])
         }
     }
 }
